@@ -1,0 +1,33 @@
+<head>
+    <link rel="stylesheet" href="style.css">
+
+    <title>Online Raster Editor</title>
+</head>
+<body oncontextmenu="return false;">
+    <div id="sidebar">
+        <div id="toolarea">
+        </div>
+
+        <hr>
+
+        <canvas id="picker"></canvas>
+
+        <hr>
+
+        <button id="importBtn">Import</button>
+        <button onclick="save()">Save</button>
+    </div>
+
+
+    <div id="workarea" style="left: 250px; top: 100px">
+        <canvas id="main"></canvas>
+        <canvas id="overlay"></canvas>
+    </div>
+
+    <script src="importer.js"></script>
+    <script src="tools.js"></script>
+    <script src="canvasUtils.js"></script>
+    <script src="navigate.js"></script>
+    <script src="index.js"></script>
+    <script src="colorpicker.js"></script>
+</body>

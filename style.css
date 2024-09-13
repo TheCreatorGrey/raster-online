@@ -1,0 +1,67 @@
+html {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    padding: 0;
+    background-color: rgb(34, 34, 34);
+    user-select: none;
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#sidebar {
+    width: 200px;
+    display: inline-block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border-top-right-radius: 10px;
+    overflow: hidden;
+    z-index: 1;
+    background-color: black;
+}
+
+#toolarea {
+    width: 200px;
+}
+
+.toolButton {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    border: 0;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 5px;
+    vertical-align: top;
+
+    background-color: grey;
+}
+
+canvas {
+    image-rendering: pixelated; 
+    image-rendering: crisp-edges;
+}
+
+#main, #overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#picker {
+    background-image: url(./assets/checkerboard.png);
+    background-size: 50px;
+}
+
+#workarea {
+    position: absolute;
+    background-image: url(./assets/checkerboard.png);
+    background-size: 50px;
+    image-rendering: pixelated; 
+    image-rendering: crisp-edges;
+}
