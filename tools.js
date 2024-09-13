@@ -1,60 +1,55 @@
 const toolArea = document.getElementById("toolarea");
 
 const tools = {
-    "Select":{
+    "select":{
         id:6,
-        icon:"select"
     },
 
-    "Draw":{
+    "draw":{
         id:0,
-        icon:"draw"
     },
 
-    "Line":{
+    "line":{
         id:1,
-        icon:"line"
     },
 
-    "Rectangle":{
+    "rect":{
         id:2,
-        icon:"rect"
     },
 
-    "Fill":{
+    "fill":{
         id:4,
-        icon:"fill"
     },
 
-    "Replace":{
+    "replace":{
         id:5,
-        icon:"replace"
     },
 
 
 
-    "Lighten":{
+    "lighten":{
         id:3,
-        icon:"filter",
         filter_id:0
     },
 
-    "Darken":{
+    "darken":{
         id:3,
-        icon:"filter",
         filter_id:1
     },
 
-    "Stipple":{
+    "stipple":{
         id:3,
-        icon:"filter",
         filter_id:2
     },
 
-    "Noise":{
+    "noise":{
         id:3,
-        icon:"filter",
         filter_id:3
+    },
+
+    "clear":{
+        id:3,
+        filter_id:4
     },
 }
 
@@ -68,7 +63,7 @@ for (var t in tools) {
         'beforeend',
         `
         <button class="toolButton" onclick="toolID = ${tool.id}; filterMode = ${tool.filter_id}">
-            ${t}
+            <img src="./assets/tools/${t}.png" title="${t}">
         </button>
         `
     )

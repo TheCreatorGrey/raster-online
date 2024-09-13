@@ -29,7 +29,8 @@ function drawLine(ctx, x0, y0, x1, y1, rgba=[0, 0, 0, 1]) {
         putPixel(
             ctx,
             x0, y0, 
-            rgba
+            rgba,
+            true
         )
     
         if (x0 === x1 && y0 === y1) break;
@@ -46,33 +47,37 @@ function drawRect(context, topLeft, bottomRight, color) {
     let bottom = bottomRight[1];
     let right = bottomRight[0];
 
-    drawLine(
-        context,
-        left, top,
-        right, top,
-        color
-    );
+    // If rect is inverted, correct coordinates
+    if (top > bottom) {
+        let t = top
+        top = bottom
+        bottom = t
+    }
 
-    drawLine(
-        context,
-        right, top,
-        right, bottom,
-        color
-    );
+    if (right < left) {
+        let r = right
+        right = left
+        left = r
+    }
 
-    drawLine(
-        context,
-        right, bottom,
-        left, bottom,
-        color
-    );
+    let width = right-left
+    let height = bottom-top
 
-    drawLine(
-        context,
-        left, top,
-        left, bottom,
-        color
-    );
+    context.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
+
+
+    // If scale on either dimension is <2, just draw single rectangle
+    if (
+        (Math.abs(width) < 2) ||
+        (Math.abs(height) < 2)
+    ) {
+        context.fillRect(left, top, width+1, height+1)
+    } else { // Draw normally
+        context.fillRect(left, top, width+1, 1) // Top
+        context.fillRect(right, top+1, 1, height-1) // Right
+        context.fillRect(left, bottom, width+1, 1) // Bottom
+        context.fillRect(left, top+1, 1, height-1) // Left
+    }
 }
 
 

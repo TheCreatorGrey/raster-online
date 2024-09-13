@@ -52,6 +52,10 @@ function filter(x, y, color, mode) {
 
             return [color[0]+rdm, color[1]+rdm, color[2]+rdm, color[3]];
 
+        // Clear filter
+        case 4:
+            return [0, 0, 0, 0];
+
         default:
             return [color[0], color[1], color[2], color[3]]
     }
@@ -174,6 +178,18 @@ async function applyChange(context, c) {
 
             let endX = c[4][0]+1;
             let endY = c[4][1]+1;
+
+            // If rect is inverted, correct coordinates
+            if (endY < startY) {
+                let s = startY
+                startY = endY
+                endY = s
+            }
+            if (endX < startX) {
+                let s = startX
+                startX = endX
+                endX = s
+            }
 
             if (context === mainCtx) {
                 for (let x=startX; x < endX; x++) {
