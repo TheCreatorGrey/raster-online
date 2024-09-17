@@ -2,6 +2,8 @@ html {
     margin: 0;
     height: 100%;
     overflow: hidden;
+    color: white;
+    font-family: sans-serif;
 }
 
 body {
@@ -30,17 +32,33 @@ body {
     width: 200px;
 }
 
-.toolButton {
-    width: 40px;
-    height: 40px;
+textarea {
+    resize: none;
+    height: 20px;
+    line-height: 20px;
+    box-sizing: unset;
     border-radius: 5px;
-    padding: 0;
-    margin: 2px;
-    vertical-align: top;
+    border: 1px solid white;
+    background-color: rgb(90, 90, 90);
+    color: white;
+    width: 50px;
+    vertical-align: middle;
+}
+
+button {
+    border-radius: 5px;
     color: white;
     border: 1px solid white;
     background-color: rgba(0, 0, 0, 0.5);
     cursor: pointer;
+}
+
+.toolButton {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 2px;
+    vertical-align: top
 }
 
 .toolButton img {
@@ -63,7 +81,7 @@ canvas {
 
 #picker {
     background-image: url(./assets/checkerboard.png);
-    background-size: 50px;
+    background-size: 20px;
     cursor:w-resize;
     border-radius: 5px;
 }
@@ -71,7 +89,6 @@ canvas {
 #workarea {
     position: absolute;
     background-image: url(./assets/checkerboard.png);
-    background-size: 50px;
     image-rendering: pixelated; 
     image-rendering: crisp-edges;
 }

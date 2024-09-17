@@ -18,6 +18,9 @@ function adjustCanvas() {
 }
 adjustCanvas()
 
+let bounding = workarea.getBoundingClientRect()
+workarea.style.backgroundSize = `${bounding.width/canvasResolution[0]}px`
+
 
 
 
@@ -176,8 +179,8 @@ async function applyChange(context, c) {
             let startX = c[3][0];
             let startY = c[3][1];
 
-            let endX = c[4][0]+1;
-            let endY = c[4][1]+1;
+            let endX = c[4][0];
+            let endY = c[4][1];
 
             // If rect is inverted, correct coordinates
             if (endY < startY) {
@@ -190,6 +193,9 @@ async function applyChange(context, c) {
                 startX = endX
                 endX = s
             }
+
+            endY += 1
+            endX += 1
 
             if (context === mainCtx) {
                 for (let x=startX; x < endX; x++) {
@@ -211,12 +217,12 @@ async function applyChange(context, c) {
                     }
                 }
             } else { // Region preview
-            drawRect(
-                context, 
-                [startX, startY], 
-                [endX-1, endY-1],
-                [255, 0, 255, .5]
-            )
+                drawRect(
+                    context, 
+                    [startX, startY], 
+                    [endX-1, endY-1],
+                    [255, 0, 255, .5]
+                )
             }
 
             break
@@ -315,8 +321,23 @@ async function applyChange(context, c) {
                 let startX = selection[0];
                 let startY = selection[1];
     
-                let endX = selection[2]+1;
-                let endY = selection[3]+1;
+                let endX = selection[2];
+                let endY = selection[3];
+
+                // If rect is inverted, correct coordinates
+                if (endY < startY) {
+                    let s = startY
+                    startY = endY
+                    endY = s
+                }
+                if (endX < startX) {
+                    let s = startX
+                    startX = endX
+                    endX = s
+                }
+
+                endX += 1;
+                endY += 1;
 
                 let offset = [selection[4], selection[5]];
     
@@ -542,5 +563,21 @@ workarea.onmouseup = () => {
         }
 
         pendingChange = null;
+    }
+}
+
+
+
+
+
+
+
+document.body.onkeydown = (event) => {
+    console.log(event.key)
+
+    switch(event.key) {
+        case "z":
+            changeLog.pop()
+            reRender()
     }
 }

@@ -4,3 +4,11 @@ Added tool
 Improved rect
 Fixed inverted rect issue with filters
 Added tooltips and appropriate mouse cursor over certain elements
+
+Version 3:
+Aligned transparent background to grid
+Fixed color picker
+Fixed filter tool
+Fixed selection tool
+Replaced icon for color replace tool
+Added canvas resizing

@@ -81,7 +81,7 @@ function drawRect(context, topLeft, bottomRight, color) {
 }
 
 
-function mousePositionFromEvent(event, element, resolution) {
+function mousePositionFromEvent(event, element, resolution, round=true) {
     let bounding = element.getBoundingClientRect();
 
     let posX = event.clientX;
@@ -96,8 +96,10 @@ function mousePositionFromEvent(event, element, resolution) {
     posX *= resolution[0];
     posY *= resolution[1];
 
-    posX = Math.floor(posX);
-    posY = Math.floor(posY);
+    if (round) {
+        posX = Math.floor(posX);
+        posY = Math.floor(posY);
+    }
 
     return [posX, posY]
 }

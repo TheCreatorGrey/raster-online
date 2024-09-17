@@ -45,9 +45,16 @@ function redrawPicker() {
         }
     
         putPixel(colorCtx, strokeColor[0]/factor, 1, [255, 255, 255, 1])
+        putPixel(colorCtx, (strokeColor[0]/factor)-1, 1, [220, 220, 220, 1])
+
         putPixel(colorCtx, strokeColor[1]/factor, 2, [255, 255, 255, 1])
+        putPixel(colorCtx, (strokeColor[1]/factor)-1, 2, [220, 220, 220, 1])
+
         putPixel(colorCtx, strokeColor[2]/factor, 3, [255, 255, 255, 1])
+        putPixel(colorCtx, (strokeColor[2]/factor)-1, 3, [220, 220, 220, 1])
+
         putPixel(colorCtx, strokeColor[3]*subdivisions, 4, [255, 255, 255, 1])
+        putPixel(colorCtx, (strokeColor[3]*subdivisions)-1, 4, [220, 220, 220, 1])
     }
 }
 
@@ -57,9 +64,12 @@ var dragging = false;
 
 colorCanvas.onmousemove = (event) => {
     if (dragging) {
-        let mp = mousePositionFromEvent(event, colorCanvas, [subdivisions, 5]);
+        let mp = mousePositionFromEvent(event, colorCanvas, [subdivisions, 5], false);
         let posX = mp[0];
         let posY = mp[1];
+
+        posX = Math.round(posX);
+        posY = Math.floor(posY)
 
         console.log(posX, posY)
 
@@ -79,8 +89,11 @@ colorCanvas.onmousedown = () => {
 
 colorCanvas.onmouseup = () => {
     dragging = false
+
+    console.log(strokeColor)
 }
 
 colorCanvas.onmouseout = () => {
     dragging = false
+    console.log(strokeColor)
 }
