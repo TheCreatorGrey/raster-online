@@ -1,3 +1,5 @@
+// I would add more commenting here but it seems fairly obvious what these do...
+
 function putPixel(ctx, x, y, color, overwrite=false) {
     if (overwrite) {
         ctx.clearRect(x, y, 1, 1)

@@ -16,6 +16,10 @@ const tools = {
     "rect":{
         id:2,
     },
+    
+    "circle":{
+        id:7,
+    },
 
     "fill":{
         id:4,
@@ -54,10 +58,9 @@ const tools = {
 }
 
 
+// Populates the sidebar with buttons for each tool
 for (var t in tools) {
     let tool = tools[t];
-
-    console.log(t, tool)
 
     toolArea.insertAdjacentHTML(
         'beforeend',

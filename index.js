@@ -4,7 +4,16 @@ const canvas = document.getElementById("main");
 const mainCtx = canvas.getContext("2d", { willReadFrequently: true });
 
 const overlay = document.getElementById("overlay");
-const overlayCtx = overlay.getContext("2d");
+const overlayCtx = overlay.getContext("2d", { willReadFrequently: true });
+
+// /\ /\ /\ /\
+// There are two canvases.
+// The "overlay" canvas is where previews of new changes are drawn until they are finished
+// When a change is finished it will finally be drawn to the "main" canvas.
+// This makes it so that the whole thing doesnt need to be redrawn every time a change is made. This is inefficient.
+
+// The "workarea" above is a div that holds both of the canvases to ensure they both align. This is the element that 
+// is actually adjusted when zooming in or panning.
 
 
 var canvasResolution = [16, 16]
@@ -100,7 +109,6 @@ var pendingChange;
 var selection = [0, 0, 0, 0, 0, 0]; 
 var selectionExists = false;
 
-
 function save() {
     let link = document.createElement("a");
     document.body.appendChild(link);
@@ -118,7 +126,7 @@ async function applyChange(context, c) {
     let color = c[1];
 
     switch (type) {
-        // Stroke is a multi-point line (0)
+        // Change is a multi-point line (0)
         case 0:
             let lines = c[2];
             let lastPos;
@@ -140,7 +148,7 @@ async function applyChange(context, c) {
 
 
 
-        // Stroke is a line (1)
+        // Change is a line (1)
         case 1:
             let p1 = c[2];
             let p2 = c[3];
@@ -156,7 +164,7 @@ async function applyChange(context, c) {
 
 
 
-        // Stroke is a rectangle (2)
+        // Change is a rectangle (2)
         case 2:
             let top = c[2][1];
             let bottom = c[3][1];
@@ -174,7 +182,7 @@ async function applyChange(context, c) {
 
 
 
-        // Stroke is a filter (3)
+        // Change is a filter (3)
         case 3:
             let startX = c[3][0];
             let startY = c[3][1];
@@ -229,7 +237,7 @@ async function applyChange(context, c) {
 
 
 
-        // Stroke is a fill (4)
+        // Change is a fill (4)
         case 4:
             let fillQueue = [];
             let filled = [];
@@ -286,7 +294,7 @@ async function applyChange(context, c) {
             break
 
 
-        // Stroke is a color replacement (5)
+        // Change is a color replacement (5)
         case 5:
             let toReplace = c[2];
 
@@ -308,7 +316,7 @@ async function applyChange(context, c) {
             break
 
 
-        // Stroke selection and move (6)
+        // Change is selection and move (6)
         case 6:
             let stage = c[2]
 
@@ -354,7 +362,33 @@ async function applyChange(context, c) {
             break
 
 
-        // Stroke is an image (8)
+        // Change is a circle (7)
+        case 7:
+            function distance(p1, p2) {
+                return Math.sqrt(
+                    ((p2[0] - p1[0])**2) + 
+                    ((p2[1] - p1[1])**2)
+                )
+            }
+
+            let center = c[2];
+            let edge = c[3];
+            let radius = Math.ceil(distance(center, edge));
+
+            for (let x=center[0]-radius; x < center[0]+radius; x++) {
+                for (let y=center[1]-radius; y < center[1]+radius; y++) {
+                    let distanceFromCenter = Math.round(distance(center, [x, y]))
+
+                    if (distanceFromCenter < radius) {
+                        putPixel(context, x, y, color)
+                    }
+                }
+            }
+
+            break
+
+
+        // Change is an image (8)
         case 8:
             let position = c[2];
             let image = c[3];
@@ -383,48 +417,50 @@ function update() {
         applyChange(overlayCtx, pendingChange)
     }
 
-    drawRect(
-        overlayCtx,
-        [
-            selection[0],
-            selection[1]
-        ],
-        [
-            selection[2],
-            selection[3]
-        ],
-        [255, 150, 100, .5]
-    )
-
-    drawRect(
-        overlayCtx,
-        [
-            selection[0]+selection[4],
-            selection[1]+selection[5]
-        ],
-        [
-            selection[2]+selection[4],
-            selection[3]+selection[5]
-        ],
-        [100, 100, 255, .5]
-    )
+    if (selectionExists) {
+        drawRect(
+            overlayCtx,
+            [
+                selection[0],
+                selection[1]
+            ],
+            [
+                selection[2],
+                selection[3]
+            ],
+            [255, 150, 100, .5]
+        )
+    
+        drawRect(
+            overlayCtx,
+            [
+                selection[0]+selection[4],
+                selection[1]+selection[5]
+            ],
+            [
+                selection[2]+selection[4],
+                selection[3]+selection[5]
+            ],
+            [100, 100, 255, .5]
+        )
+    }
 }
 
 setInterval(update, 10);
 
 
 
-let toolID = 1;
+let toolID = 0;
 let filterMode = 0;
 workarea.onmousemove = (event) => {
     // If the mouse is moving during an active change,
     // the change should be modified (e.g. the bottom right
     // corner of a rectangle should be dragged to the mouse position)
+    
     if (pendingChange) {
         let mp = mousePositionFromEvent(event, workarea, canvasResolution);
         let posX = mp[0];
         let posY = mp[1];
-
 
         stroke = pendingChange;
         let type = stroke[0];
@@ -450,6 +486,10 @@ workarea.onmousemove = (event) => {
                 break
 
             case 6:
+                // There are two stages of a selection
+                // stage 0 refers to the selection area being dragged out
+                // stage 1 is when that selection is moved
+
                 let stage = stroke[2]
 
                 if (stage === 0) {
@@ -461,12 +501,23 @@ workarea.onmousemove = (event) => {
                     selection[2] = stroke[4][0];
                     selection[3] = stroke[4][1];
                 } else {
-                    stroke[3][0] = posX-selection[2];
-                    stroke[3][1] = posY-selection[3];
+                    let initial = stroke[3];
 
-                    selection[4] = posX-selection[2];
-                    selection[5] = posY-selection[3];
+                    // Set offset of selection to mouse position (moving selection)
+                    stroke[4][0] = posX-initial[0];
+                    stroke[4][1] = posY-initial[1];
+                    
+                    // Update visualisation to match actual selection
+                    selection[4] = stroke[4][0];
+                    selection[5] = stroke[4][1];
                 }
+
+                break
+
+            case 7:
+                stroke[3][0] = posX;
+                stroke[3][1] = posY;
+                break
         }
     }
 };
@@ -481,9 +532,11 @@ workarea.onmousedown = (event) => {
     let posY = mp[1];
 
     switch (event.button) {
-        // If the button is a left click, initiate a change based on the tool 
+        // If the button is a left click, initiate a change based on the tool
         // selection (toolID)
         case 0:
+            // The structure of every change is different, 
+            // but they all have the same 2 first values. Type and color
             let newStroke = [
                 toolID, 
                 [
@@ -495,44 +548,72 @@ workarea.onmousedown = (event) => {
             ];
             let params;
         
-        
+            
+            // Every change is stored as an array.
+            // The structure will be defined here, and modified above in the onmousemove area.
+            // They contain values specific to the change, usually coordinate and color values.
+
+            // Make sure your IDE uses a monospace font (most do), otherwise the below comments wont be aligned
             switch (toolID) {
                 case 0:
+                    // multi point line (draw)
+                    //        \/ array of points (to be changed)
                     params = [[]]
                     break
         
                 case 1:
+                    // 2 point line (straight line)
+                    //         \/ start     \/ end (to be changed)
                     params = [[posX, posY], [posX, posY]]
                     break
         
                 case 2:
+                    // rectangle
+                    //        \/ top left   \/ bottom right (to be changed)
                     params = [[posX, posY], [posX, posY]]
                     break
         
                 case 3:
+                    // filter
+                    //       \/ given     \/ top left   \/ bottom right (to be changed)
                     params = [filterMode, [posX, posY], [posX, posY]]
                     break
 
                 case 4:
+                    // fill
+                    //       \/ point in area to fill
                     params = [[posX, posY]]
                     break
 
                 case 5:
+                    // color replacement
+                    //       \/ color to replace
                     params = [getPixel(mainCtx, posX, posY)]
                     break
 
                 case 6:
+                    // selection
                     if (selectionExists) {
-                        params = [1, [posX, posY]] // Append offset change
+                        // stage \/  \/ initial    \/ offset (to be changed)
+                        params = [1, [posX, posY], [posX, posY]] // Append offset change
                     } else {
+                        // stage \/  \/ top left   \/ bottom right (both to be changed)
                         params = [0, [posX, posY], [posX, posY]]; // Append selection initialization change
                         selectionExists = true
                     }
                     
                     break
+
+                case 7:
+                    // circle / ellipse
+                    //        \/ top left   \/ bottom right (to be changed)
+                    params = [[posX, posY], [posX, posY]]
+                    break
             }
             
-            newStroke.push(...params)
+            newStroke.push(...params) // Add parameters to the change array
+
+            // In the below mouseup event, it will detect that a new change has been made and draw it
             pendingChange = newStroke
 
             break
@@ -571,13 +652,14 @@ workarea.onmouseup = () => {
 
 
 
-
+// For now, the only function of this is to detect when the "z"
+// key is pressed and undoes a change
 document.body.onkeydown = (event) => {
-    console.log(event.key)
-
     switch(event.key) {
         case "z":
+            // Remove last change
             changeLog.pop()
+            // Redraw
             reRender()
     }
 }

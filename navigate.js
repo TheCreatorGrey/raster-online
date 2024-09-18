@@ -29,10 +29,13 @@ document.body.onmouseup = () => {
 
 document.body.onwheel = function (event) {  
     let bounding = workarea.getBoundingClientRect();
-    let amount = event.deltaY/100;
+    let amount = event.deltaY/50;
 
     workarea.style.width = bounding.width - (canvasResolution[0]*amount);
     workarea.style.height = bounding.height - (canvasResolution[1]*amount);
+
+    workarea.style.top = bounding.top + (canvasResolution[0]*amount)/2;
+    workarea.style.left = bounding.left + (canvasResolution[1]*amount)/2;
 
     bounding = workarea.getBoundingClientRect();
     workarea.style.backgroundSize = `${bounding.width/canvasResolution[0]}px`;

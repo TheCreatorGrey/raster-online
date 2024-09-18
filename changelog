@@ -12,3 +12,12 @@ Fixed filter tool
 Fixed selection tool
 Replaced icon for color replace tool
 Added canvas resizing
+
+Version 4:
+Changed default tool to draw
+Made selection indicator invisible when inactive
+Improved zooming
+Added copyright notice
+Added more commenting in the source code
+Added circle tool
+Improved selection dragging
