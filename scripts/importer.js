@@ -1,5 +1,4 @@
-var input = document.createElement('input');
-input.type = 'file';
+var input = document.getElementById("imageInput");
 
 
 input.onchange = async (e) => { 
@@ -9,8 +8,7 @@ input.onchange = async (e) => {
     reader.readAsDataURL(file);
 
     reader.onload = readerEvent => {
-        var content = readerEvent.target.result; // this is the content!
-        console.log( content );
+        var content = readerEvent.target.result;
 
         var image = new Image();
         image.onload = () => {
@@ -23,6 +21,7 @@ input.onchange = async (e) => {
             }
 
             adjustCanvas()
+            updateCanvasPosition()
 
             changeLog.push([8, [0, 0, 0], [0, 0], image])
 
@@ -32,6 +31,11 @@ input.onchange = async (e) => {
         image.src = content;
     }
 }
+
+input.onclick = function () {
+    // Reset the file input so the same image can be re-imported
+    this.value = null;
+};
 
 document.getElementById("importBtn").onclick = () => {
     input.click();

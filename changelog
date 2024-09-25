@@ -21,3 +21,12 @@ Added copyright notice
 Added more commenting in the source code
 Added circle tool
 Improved selection dragging
+
+Version 5:
+Improved selection and move tool
+Fixed image importing bug
+Made file input only accept images
+Gave color picker higher resolution
+Improved zooming navigation
+Improved file organization
+Added documentation

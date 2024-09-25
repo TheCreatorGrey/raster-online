@@ -348,15 +348,16 @@ async function applyChange(context, c) {
                 endY += 1;
 
                 let offset = [selection[4], selection[5]];
-    
-                for (let x=startX; x < endX; x++) {
-                    for (let y=startY; y < endY; y++) {
-                        let pixel = getPixel(context, x, y);
-                        
-                        //putPixel(context, x, y, [0, 0, 0, 0], true);
-                        putPixel(context, x+offset[0], y+offset[1], pixel, true);
-                    }
-                }
+                let size = [
+                    endX - startX,
+                    endY - startY
+                ]
+
+                console.log(size)
+
+                let region = mainCtx.getImageData(startX, startY, size[0], size[1]);
+                context.clearRect(startX, startY, size[0], size[1]);
+                context.putImageData(region, startX+offset[0], startY+offset[1]);
             }
 
             break

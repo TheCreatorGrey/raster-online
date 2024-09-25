@@ -105,3 +105,14 @@ function mousePositionFromEvent(event, element, resolution, round=true) {
 
     return [posX, posY]
 }
+
+function intersectsRect(point, rect) {
+    if (
+        (rect[0] <= point[0]) && // is point past the left side of the rect
+        (rect[1] <= point[1]) && // is point past the top side of the rect
+        (point[0] <= (rect[0]+rect[2])) && // is point before the right side of the rect
+        (point[1] <= (rect[1]+rect[3])) // is point before the bottom side of the rect
+    ) {
+        return true
+    }
+}

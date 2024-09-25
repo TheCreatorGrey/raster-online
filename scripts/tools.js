@@ -1,10 +1,6 @@
 const toolArea = document.getElementById("toolarea");
 
 const tools = {
-    "select":{
-        id:6,
-    },
-
     "draw":{
         id:0,
     },
@@ -27,6 +23,10 @@ const tools = {
 
     "replace":{
         id:5,
+    },
+
+    "select":{
+        id:6,
     },
 
 

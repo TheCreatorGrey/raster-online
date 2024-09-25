@@ -4,7 +4,7 @@ const colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
 // How many pixels wide the color picker display is.
 // this affects both the color depth and the speed
 // at which the color picker is redrawn.
-const subdivisions = 16;
+const subdivisions = 32;
 
 colorCanvas.width=subdivisions;
 colorCanvas.height=5;
