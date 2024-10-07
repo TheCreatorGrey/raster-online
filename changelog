@@ -30,3 +30,35 @@ Gave color picker higher resolution
 Improved zooming navigation
 Improved file organization
 Added documentation
+
+Version 6:
+Fixed color overwriting when drawing with alpha
+Added RGBA color indicator below color picker
+Added readme
+Added license
+Added erase tool
+Fixed knobs in color picker
+Renamed stipple tool
+Renamed and improved select tool
+Fixed undo function
+Improved documentation styling
+
+
+
+
+Known issues and pending changes:
+
+If the canvas is resized down and there are selection
+clones, the part of the original region of pixels
+that was cut off in the resize will also cut off in 
+the clone.
+
+Clear selection tool is inefficient. It should use
+clearRect instead of the loop used by filters.
+
+Revamp selections. Allow multiple operations
+on a selection. Put all filters under this new
+code.
+
+Make webpage more scalable; There is too much overlap
+when the window is sized down

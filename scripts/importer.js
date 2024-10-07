@@ -26,6 +26,9 @@ input.onchange = async (e) => {
             changeLog.push([8, [0, 0, 0], [0, 0], image])
 
             reRender()
+
+            document.getElementById("canvasSize_x").innerText = canvasResolution[0]
+            document.getElementById("canvasSize_y").innerText = canvasResolution[1]
             
         }
         image.src = content;

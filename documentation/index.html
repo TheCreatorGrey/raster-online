@@ -6,10 +6,10 @@
     <div id="content">
         <h1>Raster Online Documentation</h1>
         <span>
-            Keep in mind that while this tool is capable of handling
-            high resolution images, it is designed for pixel art. If 
-            you use high resolution images, you may experience 
-            performance issues. <br><br>
+            Keep in mind that while this tool is generally optimized
+            enough to handle high resolution images, it is designed 
+            for pixel art. If you use high resolution images, you 
+            may experience performance issues. <br><br>
 
             This document will go through every feature in this tool
             and explain their purposes and uses. This documentation
@@ -72,11 +72,13 @@
             respectively.
 
             <h3>Draw</h3>
-            This tool will allow you to draw a line using your mouse. I don't 
-            think further explanation is needed here.
+            Draws a multi-point line following your cursor.
+
+            <h3>Erase</h3>
+            Clears pixels following the cursor.
 
             <h3>Line</h3>
-            This tool will create a 2 point straight line between the starting
+            This tool will create a 2-point straight line between the starting
             point and ending point.
 
             <h3>Rect</h3>
@@ -99,7 +101,7 @@
             any pixel with the same color as the pixel that was clicked will be 
             changed to the selected color.
 
-            <h3>Select</h3>
+            <h3>Clone selection</h3>
             This tool uses two clicks and drags. The first "stage" is selection;
             a purple rectangle will indicate the area you are selecting, between
             the starting and ending point. After a selection is made, you can
@@ -119,7 +121,7 @@
             <h3>Darken</h3>
             A filter which darkens the color of affected pixels.
 
-            <h3>Stipple</h3>
+            <h3>Dither</h3>
             A filter which alternates affected pixels between their original
             colors and transparency like a checkerboard.
 
@@ -127,7 +129,7 @@
             A filter which changes the brightness of affected pixels based
             on random values.
 
-            <h3>Clear</h3>
+            <h3>Clear Selection</h3>
             Erases the affected area.
         </span>
 

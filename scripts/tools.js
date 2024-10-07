@@ -5,6 +5,10 @@ const tools = {
         id:0,
     },
 
+    "erase":{
+        id:9,
+    },
+
     "line":{
         id:1,
     },
@@ -25,11 +29,9 @@ const tools = {
         id:5,
     },
 
-    "select":{
+    "clone selection":{
         id:6,
     },
-
-
 
     "lighten":{
         id:3,
@@ -41,7 +43,7 @@ const tools = {
         filter_id:1
     },
 
-    "stipple":{
+    "dither":{
         id:3,
         filter_id:2
     },
@@ -51,10 +53,22 @@ const tools = {
         filter_id:3
     },
 
-    "clear":{
+    "clear selection":{
         id:3,
         filter_id:4
     },
+
+    "empty-1":{
+        placeholder:true
+    },
+
+    "empty-2":{
+        placeholder:true
+    },
+
+    "empty-3":{
+        placeholder:true
+    }
 }
 
 
@@ -62,12 +76,21 @@ const tools = {
 for (var t in tools) {
     let tool = tools[t];
 
-    toolArea.insertAdjacentHTML(
-        'beforeend',
-        `
-        <button class="toolButton" onclick="toolID = ${tool.id}; filterMode = ${tool.filter_id}">
-            <img src="./assets/tools/${t}.png" title="${t}">
-        </button>
-        `
-    )
+    if (tool.placeholder) {
+        toolArea.insertAdjacentHTML(
+            'beforeend',
+            `
+            <button class="toolButton"></button>
+            `
+        )
+    } else {
+        toolArea.insertAdjacentHTML(
+            'beforeend',
+            `
+            <button class="toolButton" onclick="toolID = ${tool.id}; filterMode = ${tool.filter_id}" title="${t}">
+                <img src="./assets/tools/${t}.png">
+            </button>
+            `
+        )
+    }
 }

@@ -16,6 +16,14 @@ const overlayCtx = overlay.getContext("2d", { willReadFrequently: true });
 // is actually adjusted when zooming in or panning.
 
 
+function getDistance(p1, p2) {
+    return Math.sqrt(
+        ((p2[0] - p1[0])**2) + 
+        ((p2[1] - p1[1])**2)
+    )
+}
+
+
 var canvasResolution = [16, 16]
 function adjustCanvas() {
     canvas.width=canvasResolution[0];
@@ -44,7 +52,7 @@ function filter(x, y, color, mode) {
         case 1:
             return [color[0]-10, color[1]-10, color[2]-10, color[3]]
 
-        // Stipple filter
+        // Dither filter
         case 2:
             let alpha = color[3];
 
@@ -121,24 +129,47 @@ function save() {
 
 
 // Renders a change in array form to a canvas
-async function applyChange(context, c) {
+async function applyChange(context, c, log=true) {
     let type = c[0];
     let color = c[1];
 
+    if (log) {
+        changeLog.push(pendingChange)
+    }
+
     switch (type) {
-        // Change is a multi-point line (0)
+        // Drew multi-point line (0)
         case 0:
             let lines = c[2];
             let lastPos;
 
+            // Put first pixel since this is ignored below
+            putPixel(
+                context,
+                lines[0][0], lines[0][1], 
+                color
+            )
+
             for (var l of lines) {
                 if (lastPos) {
-                    drawLine(
-                        context,
-                        lastPos[0], lastPos[1],
-                        l[0], l[1],
-                        color
-                    )
+                    if (getDistance(lastPos, l) >= 1) {
+
+                        // This is the same calculation that is used in
+                        // the line algorithm which decides where the next
+                        // pixel should be. By offsetting the first position
+                        // by the result of this equation, the first pixel of
+                        // the line will be removed, avoiding overlap
+                        offsetx = Math.sign(l[0] - lastPos[0]);
+                        offsety = Math.sign(l[1] - lastPos[1]);
+
+                        drawLine(
+                            context,
+                            lastPos[0] + offsetx, 
+                            lastPos[1] + offsety,
+                            l[0], l[1],
+                            color
+                        )
+                    }
                 }
 
                 lastPos = l
@@ -148,7 +179,7 @@ async function applyChange(context, c) {
 
 
 
-        // Change is a line (1)
+        // Added line (1)
         case 1:
             let p1 = c[2];
             let p2 = c[3];
@@ -164,7 +195,7 @@ async function applyChange(context, c) {
 
 
 
-        // Change is a rectangle (2)
+        // Added rectangle (2)
         case 2:
             let top = c[2][1];
             let bottom = c[3][1];
@@ -182,7 +213,7 @@ async function applyChange(context, c) {
 
 
 
-        // Change is a filter (3)
+        // Filtered area (3)
         case 3:
             let startX = c[3][0];
             let startY = c[3][1];
@@ -237,7 +268,7 @@ async function applyChange(context, c) {
 
 
 
-        // Change is a fill (4)
+        // Filled area (4)
         case 4:
             let fillQueue = [];
             let filled = [];
@@ -294,7 +325,7 @@ async function applyChange(context, c) {
             break
 
 
-        // Change is a color replacement (5)
+        // Replaced color (5)
         case 5:
             let toReplace = c[2];
 
@@ -316,7 +347,7 @@ async function applyChange(context, c) {
             break
 
 
-        // Change is selection and move (6)
+        // Cloned selection (6)
         case 6:
             let stage = c[2]
 
@@ -347,38 +378,29 @@ async function applyChange(context, c) {
                 endX += 1;
                 endY += 1;
 
-                let offset = [selection[4], selection[5]];
+                let offset = c[4];
                 let size = [
                     endX - startX,
                     endY - startY
                 ]
 
-                console.log(size)
-
                 let region = mainCtx.getImageData(startX, startY, size[0], size[1]);
-                context.clearRect(startX, startY, size[0], size[1]);
+                //context.clearRect(startX, startY, size[0], size[1]);
                 context.putImageData(region, startX+offset[0], startY+offset[1]);
             }
 
             break
 
 
-        // Change is a circle (7)
+        // Added circle (7)
         case 7:
-            function distance(p1, p2) {
-                return Math.sqrt(
-                    ((p2[0] - p1[0])**2) + 
-                    ((p2[1] - p1[1])**2)
-                )
-            }
-
             let center = c[2];
             let edge = c[3];
-            let radius = Math.ceil(distance(center, edge));
+            let radius = Math.ceil(getDistance(center, edge));
 
             for (let x=center[0]-radius; x < center[0]+radius; x++) {
                 for (let y=center[1]-radius; y < center[1]+radius; y++) {
-                    let distanceFromCenter = Math.round(distance(center, [x, y]))
+                    let distanceFromCenter = Math.round(getDistance(center, [x, y]))
 
                     if (distanceFromCenter < radius) {
                         putPixel(context, x, y, color)
@@ -389,12 +411,23 @@ async function applyChange(context, c) {
             break
 
 
-        // Change is an image (8)
+        // Added image (8)
         case 8:
             let position = c[2];
             let image = c[3];
 
             context.drawImage(image, position[0], position[1])
+
+            break
+
+
+        // Erased pixels (9)
+        case 9:
+            let points = c[2];
+
+            for (var p of points) {
+                clearPixel(mainCtx, p[0], p[1])
+            }
 
             break
     }
@@ -406,7 +439,7 @@ function reRender() {
     mainCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
 
     for (let c of changeLog) {
-        applyChange(mainCtx, c)
+        applyChange(mainCtx, c, false)
     }
 }
 
@@ -415,7 +448,7 @@ function update() {
     overlayCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
 
     if (pendingChange) {
-        applyChange(overlayCtx, pendingChange)
+        applyChange(overlayCtx, pendingChange, false)
     }
 
     if (selectionExists) {
@@ -487,9 +520,9 @@ workarea.onmousemove = (event) => {
                 break
 
             case 6:
-                // There are two stages of a selection
+                // There are two stages of a selection clone
                 // stage 0 refers to the selection area being dragged out
-                // stage 1 is when that selection is moved
+                // stage 1 is where that selection is moved or copied
 
                 let stage = stroke[2]
 
@@ -518,6 +551,10 @@ workarea.onmousemove = (event) => {
             case 7:
                 stroke[3][0] = posX;
                 stroke[3][1] = posY;
+                break
+
+            case 9:
+                stroke[2].push([posX, posY])
                 break
         }
     }
@@ -593,7 +630,7 @@ workarea.onmousedown = (event) => {
                     break
 
                 case 6:
-                    // selection
+                    // selection clone
                     if (selectionExists) {
                         // stage \/  \/ initial    \/ offset (to be changed)
                         params = [1, [posX, posY], [posX, posY]] // Append offset change
@@ -609,6 +646,12 @@ workarea.onmousedown = (event) => {
                     // circle / ellipse
                     //        \/ top left   \/ bottom right (to be changed)
                     params = [[posX, posY], [posX, posY]]
+                    break
+
+                case 9:
+                    // eraser
+                    //        \/ array of points (to be changed)
+                    params = [[]]
                     break
             }
             
@@ -635,7 +678,6 @@ workarea.onmousedown = (event) => {
 workarea.onmouseup = () => {
     if (pendingChange) {
         applyChange(mainCtx, pendingChange)
-        changeLog.push(pendingChange)
 
         if (pendingChange[0] === 6) {
             if (pendingChange[2] === 1) {
@@ -658,8 +700,17 @@ workarea.onmouseup = () => {
 document.body.onkeydown = (event) => {
     switch(event.key) {
         case "z":
+            let lastChange = changeLog[changeLog.length-1]
+
             // Remove last change
             changeLog.pop()
+
+            // If last change was a selection clone, the change
+            // consists of two items. Remove the second part of the change.
+            if (lastChange[0] === 6) {
+                changeLog.pop()
+            }
+
             // Redraw
             reRender()
     }

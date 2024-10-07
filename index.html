@@ -4,7 +4,11 @@
     <title>Online Raster Editor</title>
 </head>
 <body oncontextmenu="return false;">
-    <h6>Copyright (c) 2024 TheCreatorGrey</h6>
+    
+    <div id="branding">
+        <img src="./assets/banner_cut.png" alt=""><br>
+        <span>Copyright (c) 2024 TheCreatorGrey</span>
+    </div>
 
     <div id="sidebar">
         <a href="./documentation/">Need help?</a><br><br>
@@ -14,7 +18,14 @@
 
         <hr>
 
-        <canvas id="picker"></canvas>
+        <canvas id="picker"></canvas><br><br>
+        <span id="rgba-indicator">
+            RGBA 
+            (<span id="indicator-red"></span>,
+            <span id="indicator-green"></span>,
+            <span id="indicator-blue"></span>,
+            <span id="indicator-alpha"></span>)
+        </span>
 
         <hr>
         

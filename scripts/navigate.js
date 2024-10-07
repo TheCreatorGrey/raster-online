@@ -62,6 +62,8 @@ function resizeFromInput(event, axis) {
 
     canvasResolution[axis] = value
     adjustCanvas();
+    updateCanvasPosition()
+    reRender()
 }
 
 document.getElementById("canvasSize_x").onchange = (event) => {resizeFromInput(event, 0)};

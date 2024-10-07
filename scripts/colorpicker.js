@@ -1,6 +1,12 @@
 const colorCanvas = document.getElementById('picker');
 const colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
 
+const colorIndicator = document.getElementById("rgba-indicator");
+const CI_red = document.getElementById("indicator-red");
+const CI_green = document.getElementById("indicator-green");
+const CI_blue = document.getElementById("indicator-blue");
+const CI_alpha = document.getElementById("indicator-alpha");
+
 // How many pixels wide the color picker display is.
 // this affects both the color depth and the speed
 // at which the color picker is redrawn.
@@ -60,13 +66,20 @@ function redrawPicker() {
 
     putPixel(colorCtx, strokeColor[3]*subdivisions, 4, [255, 255, 255, 1])
     putPixel(colorCtx, (strokeColor[3]*subdivisions)-1, 4, [220, 220, 220, 1])
+
+
+    // Update RGBA color indicators
+    CI_red.innerText = strokeColor[0];
+    CI_green.innerText = strokeColor[1];
+    CI_blue.innerText = strokeColor[2];
+    CI_alpha.innerText = strokeColor[3].toFixed(2);
 }
 
 redrawPicker()
 
 var dragging = false;
 
-colorCanvas.onmousemove = (event) => {
+addEventListener("mousemove", (event) => {
     if (dragging) {
         let mp = mousePositionFromEvent(event, colorCanvas, [subdivisions, 5], false);
         let posX = mp[0];
@@ -76,23 +89,35 @@ colorCanvas.onmousemove = (event) => {
         posY = Math.floor(posY)
 
         strokeColor[posY-1] = posX*(256/subdivisions);
+        
+        // Limits
+        if (strokeColor[posY-1] < 0) {
+            strokeColor[posY-1] = 0
+        } else if (strokeColor[posY-1] > 255) {
+            strokeColor[posY-1] = 255
+        }
 
+
+        // Alpha has a different range than the other channels
+        // so it must be handled separately
         if (posY === 4) {
             strokeColor[3] = posX/subdivisions;
+
+            if (strokeColor[3] < 0) {
+                strokeColor[3] = 0
+            } else if (strokeColor[3] > 1) {
+                strokeColor[3] = 1
+            }
         }
 
         redrawPicker()
     }
-};
+})
 
 colorCanvas.onmousedown = () => {
     dragging = true
 }
 
-colorCanvas.onmouseup = () => {
+addEventListener("mouseup", () => {
     dragging = false
-}
-
-colorCanvas.onmouseout = () => {
-    dragging = false
-}
+})

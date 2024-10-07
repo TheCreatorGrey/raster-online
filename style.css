@@ -15,6 +15,24 @@ body {
     overflow: hidden;
 }
 
+
+#branding {
+    z-index: 8;
+    position: absolute;
+}
+
+#branding span {
+    padding: 5px;
+    font-size: 10px;
+}
+
+#branding img {
+    padding: 5px;
+    height: 56px;
+    image-rendering: pixelated;
+}
+
+
 #sidebar {
     width: 200px;
     display: inline-block;
@@ -79,12 +97,27 @@ canvas {
     cursor: crosshair;
 }
 
+
 #picker {
     background-image: url(./assets/checkerboard.png);
     background-size: 20px;
     cursor:w-resize;
     border-radius: 5px;
 }
+
+#indicator-red {
+    color: rgb(255, 0, 0);
+}
+#indicator-green {
+    color: rgb(0, 255, 0);
+}
+#indicator-blue {
+    color: rgb(0, 0, 255);
+}
+#indicator-alpha {
+    color: rgb(128, 128, 128);
+}
+
 
 #workarea {
     position: absolute;

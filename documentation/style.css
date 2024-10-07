@@ -8,8 +8,20 @@ body {
     padding: 50px;
     margin: 0;
     box-sizing: border-box;
-    color: wheat;
+    color: rgb(153, 174, 177);
     font-family: sans-serif;
+}
+
+h1 {
+    color: rgb(181, 101, 255);
+}
+
+h2 {
+    color: rgb(137, 110, 173)
+}
+
+h3 {
+    color: rgb(112, 124, 182)
 }
 
 #content {
