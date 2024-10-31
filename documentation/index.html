@@ -1,138 +1,167 @@
-<head>
-    <Title>Raster Online Docs</Title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="content">
-        <h1>Raster Online Documentation</h1>
-        <span>
-            Keep in mind that while this tool is generally optimized
-            enough to handle high resolution images, it is designed 
-            for pixel art. If you use high resolution images, you 
-            may experience performance issues. <br><br>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
 
-            This document will go through every feature in this tool
-            and explain their purposes and uses. This documentation
-            goes into great detail and assumes you have never used
-            image editing software before.
-        </span>
-        <br><br><br>
-
-        <h2>Navigation: Work Area</h2>
-        <span>
-            The work area can be navigated using the mouse.
-            To pan the work area, hold middle click and drag.
-            To zoom in or out of the work area, use the scroll wheel.
-        </span>
-
-        <br><br><br>
-
-        <h2>Navigation: Sidebar</h2>
-        <span>
-            On the bottom left of the screen, there will be a panel 
-            with many buttons and other elements.
-
-            <h3>Tool Area</h3>
-            On the top of this sidebar, there is a grid of buttons.
-            Each of these buttons represent tools that can be used.
-            Clicking one of these buttons will change the active
-            tool setting. See more on tools below.
-            
-            <h3>Color Picker</h3>
-            The next segment of the panel is the color picker.
-            There are four sliders which you can click and drag
-            to change the values of. Each slider represents red,
-            green, blue and transparency respectively. On the top
-            bar, you can see a preview of the current color on
-            the left.
-            
-            <h3>Document Configuration</h3>
-            On the next segment of the panel is document configuration.
-            You can control the document's width and height using their
-            respective inputs in this section. For the time being, this
-            is the only configuration that exists in this segment.
-
-            <h3>File Importing and Exporting</h3>
-            Finally, there are two buttons at the bottom of the sidebar.
-            The "Import" button will open a file dialog and allow you to
-            import an image file.
-            The "Save" button will download a PNG of your current project.
-        </span>
-
-        <br><br><br>
-
-        <h2>Tools</h2>
-        <span>
-            Tools are relatively self-explanitory. You can click and drag on
-            the work area to make changes to the canvas. What happens depends
-            on which tool you are using. Most tools will use the color
-            selected by the color picker. The terms "starting point" and 
-            "ending point" will be referenced throughout this section,
-            referring to the point where your mouse is pressed and released
-            respectively.
-
-            <h3>Draw</h3>
-            Draws a multi-point line following your cursor.
-
-            <h3>Erase</h3>
-            Clears pixels following the cursor.
-
-            <h3>Line</h3>
-            This tool will create a 2-point straight line between the starting
-            point and ending point.
-
-            <h3>Rect</h3>
-            This tool will create a rectangle between the starting and ending point.
-
-            <h3>Rect</h3>
-            This tool will create a rectangle between the starting and ending point.
-
-            <h3>Circle</h3>
-            This tool will draw a solid circle using the starting point as the center
-            and the ending point as the radius.
-
-            <h3>Fill</h3>
-            This is one of few tools that uses a single click instead of a click and
-            drag. Sets the color of any clicked "shape" or "region" to the selected 
-            color. Works the same as the "fill" function in any other raster program.
-
-            <h3>Replace</h3>
-            This tool also uses a single click instead of dragging. Upon clicking, 
-            any pixel with the same color as the pixel that was clicked will be 
-            changed to the selected color.
-
-            <h3>Clone selection</h3>
-            This tool uses two clicks and drags. The first "stage" is selection;
-            a purple rectangle will indicate the area you are selecting, between
-            the starting and ending point. After a selection is made, you can
-            click and drag the selection to its new position on the canvas.
-            While dragging, the orange rectangle will indicate the original
-            position of the selection.
-
-            <h3>Filter tools</h3>
-            All tools below are "filter" tools. When using these tools, a pink
-            rectangle will indicate the filter region between the starting and
-            ending points. Each filter will have a different effect on this
-            region of pixels once the mouse is released.
-
-            <h3>Lighten</h3>
-            A filter which lightens the color of affected pixels.
-
-            <h3>Darken</h3>
-            A filter which darkens the color of affected pixels.
-
-            <h3>Dither</h3>
-            A filter which alternates affected pixels between their original
-            colors and transparency like a checkerboard.
-
-            <h3>Noise</h3>
-            A filter which changes the brightness of affected pixels based
-            on random values.
-
-            <h3>Clear Selection</h3>
-            Erases the affected area.
-        </span>
-
-        <br><br><br>
-    </div>
-</body>
+        <Title>Raster Online Docs</Title>
+        
+        <link rel="stylesheet" href="style.css">
+        <link rel="icon" href="../assets/icon.png">
+    </head>
+    <body>
+        <div id="content">
+            <h1>Raster Online Documentation</h1>
+            <span>
+                Keep in mind that while this tool is generally optimized
+                enough to handle high resolution images, it is designed 
+                for pixel art. If you use high resolution images, you 
+                may experience performance issues. <br><br>
+    
+                This document will go through every feature in this tool
+                and explain their purposes and uses. This documentation
+                goes into great detail and assumes you have never used
+                image editing software before.
+            </span>
+            <br><br><br>
+    
+            <h2>Navigation: Work Area</h2>
+            <span>
+                The work area can be navigated using the mouse.
+                To pan the work area, hold middle click and drag.
+                To zoom in or out of the work area, use the scroll wheel.
+            </span>
+    
+            <br><br><br>
+    
+            <h2>Navigation: Sidebar</h2>
+            <span>
+                On the bottom left of the screen, there will be a panel 
+                with many buttons and other elements.
+    
+                <h3>Tool Area</h3>
+                On the top of this sidebar, there is a grid of buttons.
+                Each of these buttons represent tools that can be used.
+                Clicking one of these buttons will change the active
+                tool setting. See more on tools below.
+                
+                <h3>Color Picker</h3>
+                The next segment of the panel is the color picker.
+                There are four sliders which you can click and drag
+                to change the values of. Each slider represents red,
+                green, blue and transparency (or alpha) respectively. 
+                On the top bar, you can see a preview of the current 
+                color on the left.
+                
+                <h3>Document Configuration</h3>
+                On the next segment of the panel is document configuration.
+                You can control the document's width and height using their
+                respective inputs in this section. For the time being, this
+                is the only configuration that exists in this segment.
+    
+                <h3>File Importing and Exporting</h3>
+                Finally, there are two buttons at the bottom of the sidebar.
+                The "Import" button will open a file dialog and allow you to
+                import an image file.
+                The "Save" button will download a PNG of your current project.
+            </span>
+    
+            <br><br><br>
+    
+            <h2>Tools</h2>
+            <span>
+                Tools are relatively self-explanitory. You can click and drag on
+                the work area to make changes to the canvas. What happens depends
+                on which tool you are using. Most tools will use the color
+                selected by the color picker. The terms "starting point" and 
+                "ending point" will be referenced throughout this section,
+                referring to the point where your mouse is pressed and released
+                respectively.
+    
+                <h3>Draw</h3>
+                Draws a multi-point line following your cursor.
+    
+                <h3>Erase</h3>
+                Clears pixels following the cursor.
+    
+                <h3>Line</h3>
+                This tool will create a 2-point straight line between the starting
+                point and ending point.
+    
+                <h3>Rect</h3>
+                This tool will create a rectangle between the starting and ending point.
+    
+                <h3>Circle</h3>
+                This tool will draw a solid circle using the starting point as the center
+                and the ending point as the radius.
+    
+                <h3>Fill</h3>
+                This is one of few tools that uses a single click instead of a click and
+                drag. Sets the color of any clicked "shape" or "region" to the selected 
+                color. Works the same as the "fill" function in any other raster program.
+    
+                <h3>Replace</h3>
+                This tool also uses a single click instead of dragging. Upon clicking, 
+                any pixel with the same color as the pixel that was clicked will be 
+                changed to the selected color.
+    
+                <h3>Clear</h3>
+                This tool will clear the entire canvas.
+            </span>
+    
+            <br><br><br>
+    
+            <h2>Selection</h2>
+            <span>
+                You can select a region of pixels and move, clone or
+                apply filters to them.
+    
+                <h3>Mouse Control</h3>
+                To create a selection, hold right-click and drag across the
+                canvas. A purple rectangle will indicate your selection.
+                To move the selection, left-click on the selected region
+                and drag to the desired place. As you move the selection, 
+                an orange rectangle will indicate the original position
+                of the selection.
+    
+                <h3>Context Menu</h3>
+                When you have made a selection, a menu will appear next
+                to the top-right corner of the selection. The "Export Selection"
+                button will download the selection to an image file.
+                The section below it allows you to apply "filters" to your
+                selection. See more on filters below.
+            </span>
+    
+            <br><br><br>
+    
+            <h2>Filters</h2>
+            <span>
+                Filters allow you to change the look of the pixels in a
+                selection. Each button in the above-mentioned context menu
+                under the filter section will apply a filter to the selection.
+    
+                The functions of each are listed below:
+    
+                <h3>Brighten</h3>
+                Brightens the color of affected pixels.
+    
+                <h3>Darken</h3>
+                Darkens the color of affected pixels.
+    
+                <h3>Dither</h3>
+                Alternates affected pixels between their original
+                colors and transparency like a checkerboard.
+    
+                <h3>Noise</h3>
+                Changes the brightness of affected pixels based
+                on random values.
+    
+                <h3>Clear</h3>
+                Clears all affected pixels.
+    
+    
+            </span>
+    
+            <br><br><br>
+        </div>
+    </body>
+</html>

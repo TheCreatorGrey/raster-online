@@ -1,58 +1,77 @@
-<head>
-    <link rel="stylesheet" href="style.css">
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
 
-    <title>Online Raster Editor</title>
-</head>
-<body oncontextmenu="return false;">
+        <link rel="stylesheet" href="style.css">
+        <link rel="icon" href="./assets/icon.png">
     
-    <div id="branding">
-        <img src="./assets/banner_cut.png" alt=""><br>
-        <span>Copyright (c) 2024 TheCreatorGrey</span>
-    </div>
+        <title>Online Raster Editor</title>
+    </head>
+    <body oncontextmenu="return false;">
+        
+        <div id="branding">
+            <img src="./assets/banner_cut.png" alt=""><br>
+            <span>Copyright (c) 2024 TheCreatorGrey</span>
+        </div>
+    
+        <div id="sidebar">
+            <a href="./documentation/">Need help?</a>
 
-    <div id="sidebar">
-        <a href="./documentation/">Need help?</a><br><br>
-
-        <div id="toolarea">
+            <hr>
+    
+            <div id="toolarea">
+            </div>
+    
+            <hr>
+    
+            <canvas id="picker"></canvas><br><br>
+            <span id="rgba-indicator">
+                RGBA 
+                (<span id="indicator-red"></span>,
+                <span id="indicator-green"></span>,
+                <span id="indicator-blue"></span>,
+                <span id="indicator-alpha"></span>)
+            </span>
+    
+            <hr>
+            
+            <span>
+                Size: 
+                <textarea id="canvasSize_x">16</textarea>
+                by
+                <textarea id="canvasSize_y">16</textarea>
+            </span>
+    
+            <hr>
+    
+            <input type="file" id="imageInput" hidden="true" accept="image/*">
+            <button id="importBtn">Import</button>
+            <button onclick="save()">Save</button>
+        </div>
+    
+    
+        <div id="workarea" style="left: 250px; top: 100px">
+            <canvas id="main"></canvas>
+            <canvas id="overlay"></canvas>
+    
+            <div id="selectIndicator" class="boxIndicator"></div>
+            <div id="moveIndicator" class="boxIndicator"></div>
         </div>
 
-        <hr>
-
-        <canvas id="picker"></canvas><br><br>
-        <span id="rgba-indicator">
-            RGBA 
-            (<span id="indicator-red"></span>,
-            <span id="indicator-green"></span>,
-            <span id="indicator-blue"></span>,
-            <span id="indicator-alpha"></span>)
-        </span>
-
-        <hr>
+        <div id="selectMenu">
+            <button id="exportSelection">Export Selection</button>
+            <hr>
+            <span>Filters</span>
+        </div>
         
-        <span>
-            Size: 
-            <textarea id="canvasSize_x">16</textarea>
-            by
-            <textarea id="canvasSize_y">16</textarea>
-        </span>
-
-        <hr>
-
-        <input type="file" id="imageInput" hidden="true" accept="image/*">
-        <button id="importBtn">Import</button>
-        <button onclick="save()">Save</button>
-    </div>
-
-
-    <div id="workarea" style="left: 250px; top: 100px">
-        <canvas id="main"></canvas>
-        <canvas id="overlay"></canvas>
-    </div>
-
-    <script src="./scripts/importer.js"></script>
-    <script src="./scripts/tools.js"></script>
-    <script src="./scripts/canvasUtils.js"></script>
-    <script src="./scripts/index.js"></script>
-    <script src="./scripts/colorpicker.js"></script>
-    <script src="./scripts/navigate.js"></script>
-</body>
+        <script src="./scripts/utils.js"></script>
+        <script src="./scripts/importer.js"></script>
+        <script src="./scripts/tools.js"></script>
+        <script src="./scripts/canvasUtils.js"></script>
+        <script src="./scripts/index.js"></script>
+        <script src="./scripts/colorpicker.js"></script>
+        <script src="./scripts/navigate.js"></script>
+        <script src="./scripts/filters.js"></script>
+    </body>
+</html>

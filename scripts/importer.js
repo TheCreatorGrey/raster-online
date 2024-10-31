@@ -23,7 +23,7 @@ input.onchange = async (e) => {
             adjustCanvas()
             updateCanvasPosition()
 
-            changeLog.push([8, [0, 0, 0], [0, 0], image])
+            changeLog.push([9, [0, 0, 0], [0, 0], image])
 
             reRender()
 

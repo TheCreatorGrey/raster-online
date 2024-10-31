@@ -43,7 +43,15 @@ Renamed and improved select tool
 Fixed undo function
 Improved documentation styling
 
-
+Version 7:
+Changed selection UI and control
+Converted to standard from quirks
+Fixed consequential broken navigation
+Revamped code for tools and filters
+Moved filters to a new selection context menu
+Small UI changes and improvements
+Icon redesigns
+Updated documentation
 
 
 Known issues and pending changes:
@@ -53,12 +61,16 @@ clones, the part of the original region of pixels
 that was cut off in the resize will also cut off in 
 the clone.
 
-Clear selection tool is inefficient. It should use
-clearRect instead of the loop used by filters.
-
-Revamp selections. Allow multiple operations
-on a selection. Put all filters under this new
-code.
-
 Make webpage more scalable; There is too much overlap
 when the window is sized down
+
+UI misalignment in toolbar
+Alpha overwrite when cloning pixels
+
+Make export selection button work
+
+Add support for drawing tablets and touch devices
+
+Prevent selection context menu from going over the edge of the window
+
+UPDATE DOCUMENTATION

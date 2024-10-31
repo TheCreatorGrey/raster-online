@@ -14,8 +14,6 @@ const subdivisions = 32;
 
 colorCanvas.width=subdivisions;
 colorCanvas.height=5;
-colorCanvas.style.width=200;
-colorCanvas.style.height=200;
 
 let strokeColor = [0, 0, 0, 1];
 

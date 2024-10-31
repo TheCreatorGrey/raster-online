@@ -1,27 +1,23 @@
-const workarea = document.getElementById("workarea")
+const workarea = document.getElementById("workarea");
+
+const selectIndicator = document.getElementById("selectIndicator");
+const moveIndicator = document.getElementById("moveIndicator");
+const selectionContext = document.getElementById("selectMenu");
 
 const canvas = document.getElementById("main");
 const mainCtx = canvas.getContext("2d", { willReadFrequently: true });
 
-const overlay = document.getElementById("overlay");
-const overlayCtx = overlay.getContext("2d", { willReadFrequently: true });
+const preview = document.getElementById("overlay");
+const previewCtx = overlay.getContext("2d", { willReadFrequently: true });
 
 // /\ /\ /\ /\
 // There are two canvases.
-// The "overlay" canvas is where previews of new changes are drawn until they are finished
-// When a change is finished it will finally be drawn to the "main" canvas.
-// This makes it so that the whole thing doesnt need to be redrawn every time a change is made. This is inefficient.
+// The "preview" canvas is where previews of new changes are drawn until they are finished
+// When a change is finished, the contents of the preview canvas will be drawn to the "main" canvas applying it.
+// This makes it so that the whole thing doesnt need to be redrawn every time a change is made. That would be inefficient.
 
 // The "workarea" above is a div that holds both of the canvases to ensure they both align. This is the element that 
 // is actually adjusted when zooming in or panning.
-
-
-function getDistance(p1, p2) {
-    return Math.sqrt(
-        ((p2[0] - p1[0])**2) + 
-        ((p2[1] - p1[1])**2)
-    )
-}
 
 
 var canvasResolution = [16, 16]
@@ -30,56 +26,36 @@ function adjustCanvas() {
     canvas.height=canvasResolution[1];
     overlay.width=canvasResolution[0];
     overlay.height=canvasResolution[1];
-    workarea.style.width=canvasResolution[0]*40;
-    workarea.style.height=canvasResolution[1]*40;
+    workarea.style.width=canvasResolution[0]*40 + 'px';
+    workarea.style.height=canvasResolution[1]*40 + 'px';
 }
-adjustCanvas()
 
-let bounding = workarea.getBoundingClientRect()
-workarea.style.backgroundSize = `${bounding.width/canvasResolution[0]}px`
+window.addEventListener("load", () => {
+    adjustCanvas();
+
+    let bounding = workarea.getBoundingClientRect()
+    workarea.style.backgroundSize = `${bounding.width/canvasResolution[0]}px`
+})
 
 
+// "Box Indicator" refers to the rectangle overlays used for selection UI.
+function updateBoxIndicator(indicator, left, top, right, bottom) {
+    let corrected = correctRect(left, top, right, bottom)
 
+    let left_percent = (corrected[0]/canvasResolution[0])*100
+    let top_percent = (corrected[1]/canvasResolution[1])*100
+    let right_percent = (corrected[2]/canvasResolution[0])*100
+    let bottom_percent = (corrected[3]/canvasResolution[1])*100
+    let width = right_percent - left_percent;
+    let height = bottom_percent - top_percent
 
-// add filters
-function filter(x, y, color, mode) {
-    switch (mode) {
-        // Lighten filter
-        case 0:
-            return [color[0]+10, color[1]+10, color[2]+10, color[3]]
-
-        // Darken filter
-        case 1:
-            return [color[0]-10, color[1]-10, color[2]-10, color[3]]
-
-        // Dither filter
-        case 2:
-            let alpha = color[3];
-
-            // you may want to improve this code later (it sucks)
-            if (x % 2 && !(y % 2)) {
-                alpha = 0
-            }
-            if ((x-1) % 2 && !((y-1) % 2)) {
-                alpha = 0
-            }
-
-            return [color[0], color[1], color[2], alpha]
-        
-        // Noise filter
-        case 3:
-            rdm = 5 * (Math.random()-.5)
-
-            return [color[0]+rdm, color[1]+rdm, color[2]+rdm, color[3]];
-
-        // Clear filter
-        case 4:
-            return [0, 0, 0, 0];
-
-        default:
-            return [color[0], color[1], color[2], color[3]]
-    }
+    indicator.style.left = left_percent + "%";
+    indicator.style.top = top_percent + "%";
+    indicator.style.width = width + "%";
+    indicator.style.height = height + "%";
 }
+
+
 
 
 
@@ -94,13 +70,18 @@ var changeLog = [];
 
 // First item of a change represents its type.
 // 0 = Multi point line
-// 1 = 2 point line
-// 2 = rectangle
-// 3 = filter
-// 4 = color fill
-// 5 = color replace
-// 6 = selection
-// 8 = image
+// 1 = Erase
+// 2 = 2-point line
+// 3 = rectangle
+// 4 = circle
+// 5 = fill
+// 6 = replace color
+// 7 = clone selection
+// 8 = filter
+// 9 = image
+
+// Some of them show up on the toolbar, some don't.
+// To see these in code form, see tools.js
 
 // Second item is RGBA color in the form of an array
 // like [255, 255, 255, 1]
@@ -109,13 +90,13 @@ var changeLog = [];
 
 var pendingChange;
 
-// When a selection to move a region of pixels
-// is made, the information will be stored here.
+// Stores coordinate values when the user makes a selection.
 // first 2 are coordinates of top left of selection
 // following 2 are of the bottom right
 // last 2 items represent offset
-var selection = [0, 0, 0, 0, 0, 0]; 
-var selectionExists = false;
+var selection = [0, 0, 0, 0, 0, 0];
+// 0 = no selection 1 = making selection 2 = active selection
+var selectionStage = 0;
 
 function save() {
     let link = document.createElement("a");
@@ -128,8 +109,16 @@ function save() {
 }
 
 
+// When a change is made, it will be repeatedly drawn
+// to the preview canvas. When it is done, the preview
+// canvas will be drawn to the main canvas here
+function applyChanges() {
+    mainCtx.drawImage(preview, 0, 0)
+}
+
+
 // Renders a change in array form to a canvas
-async function applyChange(context, c, log=true) {
+async function drawChange(context, c, log=true) {
     let type = c[0];
     let color = c[1];
 
@@ -137,300 +126,7 @@ async function applyChange(context, c, log=true) {
         changeLog.push(pendingChange)
     }
 
-    switch (type) {
-        // Drew multi-point line (0)
-        case 0:
-            let lines = c[2];
-            let lastPos;
-
-            // Put first pixel since this is ignored below
-            putPixel(
-                context,
-                lines[0][0], lines[0][1], 
-                color
-            )
-
-            for (var l of lines) {
-                if (lastPos) {
-                    if (getDistance(lastPos, l) >= 1) {
-
-                        // This is the same calculation that is used in
-                        // the line algorithm which decides where the next
-                        // pixel should be. By offsetting the first position
-                        // by the result of this equation, the first pixel of
-                        // the line will be removed, avoiding overlap
-                        offsetx = Math.sign(l[0] - lastPos[0]);
-                        offsety = Math.sign(l[1] - lastPos[1]);
-
-                        drawLine(
-                            context,
-                            lastPos[0] + offsetx, 
-                            lastPos[1] + offsety,
-                            l[0], l[1],
-                            color
-                        )
-                    }
-                }
-
-                lastPos = l
-            }
-
-            break
-
-
-
-        // Added line (1)
-        case 1:
-            let p1 = c[2];
-            let p2 = c[3];
-
-            drawLine(
-                context,
-                p1[0], p1[1],
-                p2[0], p2[1],
-                color
-            )
-
-            break
-
-
-
-        // Added rectangle (2)
-        case 2:
-            let top = c[2][1];
-            let bottom = c[3][1];
-            let left = c[2][0];
-            let right = c[3][0];
-
-            drawRect(
-                context, 
-                [left, top], 
-                [right, bottom],
-                color
-            )
-
-            break
-
-
-
-        // Filtered area (3)
-        case 3:
-            let startX = c[3][0];
-            let startY = c[3][1];
-
-            let endX = c[4][0];
-            let endY = c[4][1];
-
-            // If rect is inverted, correct coordinates
-            if (endY < startY) {
-                let s = startY
-                startY = endY
-                endY = s
-            }
-            if (endX < startX) {
-                let s = startX
-                startX = endX
-                endX = s
-            }
-
-            endY += 1
-            endX += 1
-
-            if (context === mainCtx) {
-                for (let x=startX; x < endX; x++) {
-                    for (let y=startY; y < endY; y++) {
-                        let currentColor = getPixel(context, x, y);
-                        
-                        let newColor = filter(
-                            x, y, 
-                            currentColor,
-                            c[2]
-                        );
-        
-                        putPixel(
-                            context,
-                            x, y, 
-                            newColor,
-                            true
-                        )
-                    }
-                }
-            } else { // Region preview
-                drawRect(
-                    context, 
-                    [startX, startY], 
-                    [endX-1, endY-1],
-                    [255, 0, 255, .5]
-                )
-            }
-
-            break
-
-
-
-        // Filled area (4)
-        case 4:
-            let fillQueue = [];
-            let filled = [];
-
-            let start = c[2];
-            let targetColor = getPixel(mainCtx, start[0], start[1]);
-
-            fillQueue.push([start[0], start[1]])
-
-
-            while (fillQueue.length > 0) {
-                let point = fillQueue[0];
-                let x = point[0];
-                let y = point[1];
-
-                // Remove item from queue
-                fillQueue.shift()
-
-                // Ignore if point is outside of canvas
-                if (x < 0) {
-                    continue
-                } else if (canvasResolution[0] < x) {
-                    continue
-                } else if (y < 0) {
-                    continue
-                } else if (canvasResolution[1] < y) {
-                    continue
-                }
-
-                // Ignore if point has already been filled
-                if (filled.includes(`${x}/${y}`)) {
-                    continue
-                }
-                
-                let pointColor = getPixel(mainCtx, x, y);
-
-                // If color is an exact match, change pixel and continue
-                if (
-                    (pointColor[0] === targetColor[0]) && 
-                    (pointColor[1] === targetColor[1]) && 
-                    (pointColor[2] === targetColor[2]) && 
-                    (pointColor[3] === targetColor[3])
-                ) {
-                    putPixel(mainCtx, x, y, color);
-                    filled.push(`${x}/${y}`)
-
-                    fillQueue.push([x+1, y]) // Add surrounding points to be checked
-                    fillQueue.push([x-1, y])
-                    fillQueue.push([x, y+1])
-                    fillQueue.push([x, y-1])
-                }
-            }
-
-            break
-
-
-        // Replaced color (5)
-        case 5:
-            let toReplace = c[2];
-
-            for (let x=0; x < canvasResolution[0]; x++) {
-                for (let y=0; y < canvasResolution[1]; y++) {
-                    let originalColor = getPixel(mainCtx, x, y);
-    
-                    if (
-                        (originalColor[0] === toReplace[0]) && 
-                        (originalColor[1] === toReplace[1]) && 
-                        (originalColor[2] === toReplace[2]) && 
-                        (originalColor[3] === toReplace[3])
-                    ) {
-                        putPixel(mainCtx, x, y, color);
-                    }
-                }
-            }
-
-            break
-
-
-        // Cloned selection (6)
-        case 6:
-            let stage = c[2]
-
-            if (stage === 0) {
-                selection[0] = c[3][0];
-                selection[1] = c[3][1];
-                selection[2] = c[4][0];
-                selection[3] = c[4][1];
-            } else {
-                let startX = selection[0];
-                let startY = selection[1];
-    
-                let endX = selection[2];
-                let endY = selection[3];
-
-                // If rect is inverted, correct coordinates
-                if (endY < startY) {
-                    let s = startY
-                    startY = endY
-                    endY = s
-                }
-                if (endX < startX) {
-                    let s = startX
-                    startX = endX
-                    endX = s
-                }
-
-                endX += 1;
-                endY += 1;
-
-                let offset = c[4];
-                let size = [
-                    endX - startX,
-                    endY - startY
-                ]
-
-                let region = mainCtx.getImageData(startX, startY, size[0], size[1]);
-                //context.clearRect(startX, startY, size[0], size[1]);
-                context.putImageData(region, startX+offset[0], startY+offset[1]);
-            }
-
-            break
-
-
-        // Added circle (7)
-        case 7:
-            let center = c[2];
-            let edge = c[3];
-            let radius = Math.ceil(getDistance(center, edge));
-
-            for (let x=center[0]-radius; x < center[0]+radius; x++) {
-                for (let y=center[1]-radius; y < center[1]+radius; y++) {
-                    let distanceFromCenter = Math.round(getDistance(center, [x, y]))
-
-                    if (distanceFromCenter < radius) {
-                        putPixel(context, x, y, color)
-                    }
-                }
-            }
-
-            break
-
-
-        // Added image (8)
-        case 8:
-            let position = c[2];
-            let image = c[3];
-
-            context.drawImage(image, position[0], position[1])
-
-            break
-
-
-        // Erased pixels (9)
-        case 9:
-            let points = c[2];
-
-            for (var p of points) {
-                clearPixel(mainCtx, p[0], p[1])
-            }
-
-            break
-    }
+    tools[type].draw(previewCtx, c)
 }
 
 
@@ -439,44 +135,52 @@ function reRender() {
     mainCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
 
     for (let c of changeLog) {
-        applyChange(mainCtx, c, false)
+        drawChange(mainCtx, c, false)
     }
+
+    applyChanges()
 }
 
 
 function update() {
-    overlayCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
+    // Clear preview
+    previewCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
 
     if (pendingChange) {
-        applyChange(overlayCtx, pendingChange, false)
+        drawChange(previewCtx, pendingChange, false);
     }
 
-    if (selectionExists) {
-        drawRect(
-            overlayCtx,
-            [
-                selection[0],
-                selection[1]
-            ],
-            [
-                selection[2],
-                selection[3]
-            ],
-            [255, 150, 100, .5]
+    // Updates the selection preview boxes if there is a selection
+    if (selectionStage > 0) {
+        moveIndicator.hidden = false
+        selectIndicator.hidden = false
+
+        updateBoxIndicator(
+            moveIndicator, 
+            selection[0], selection[1], 
+            selection[2], selection[3]
         )
-    
-        drawRect(
-            overlayCtx,
-            [
-                selection[0]+selection[4],
-                selection[1]+selection[5]
-            ],
-            [
-                selection[2]+selection[4],
-                selection[3]+selection[5]
-            ],
-            [100, 100, 255, .5]
+
+        updateBoxIndicator(
+            selectIndicator, 
+            selection[0]+selection[4], 
+            selection[1]+selection[5],
+            selection[2]+selection[4], 
+            selection[3]+selection[5]
         )
+    } else {
+        moveIndicator.hidden = true
+        selectIndicator.hidden = true
+    }
+
+    if (selectionStage === 2) {
+        selectionContext.hidden = false
+
+        let bounding = selectIndicator.getBoundingClientRect();
+        selectionContext.style.left = bounding.right + "px"
+        selectionContext.style.top = bounding.top + "px"
+    } else {
+        selectionContext.hidden = true
     }
 }
 
@@ -485,78 +189,33 @@ setInterval(update, 10);
 
 
 let toolID = 0;
-let filterMode = 0;
 workarea.onmousemove = (event) => {
     // If the mouse is moving during an active change,
     // the change should be modified (e.g. the bottom right
-    // corner of a rectangle should be dragged to the mouse position)
+    // corner of a rectangle should be updated to the mouse position)
+
+    let mp = mousePositionFromEvent(event, workarea, canvasResolution);
+    let posX = mp[0];
+    let posY = mp[1];
     
-    if (pendingChange) {
-        let mp = mousePositionFromEvent(event, workarea, canvasResolution);
-        let posX = mp[0];
-        let posY = mp[1];
-
-        stroke = pendingChange;
-        let type = stroke[0];
-
-        switch (type) {
-            case 0:
-                stroke[2].push([posX, posY])
-                break
-
-            case 1:
-                stroke[3][0] = posX;
-                stroke[3][1] = posY
-                break
-
-            case 2:
-                stroke[3][0] = posX;
-                stroke[3][1] = posY
-                break
-
-            case 3:
-                stroke[4][0] = posX;
-                stroke[4][1] = posY
-                break
-
-            case 6:
-                // There are two stages of a selection clone
-                // stage 0 refers to the selection area being dragged out
-                // stage 1 is where that selection is moved or copied
-
-                let stage = stroke[2]
-
-                if (stage === 0) {
-                    stroke[4][0] = posX;
-                    stroke[4][1] = posY;
-
-                    selection[0] = stroke[3][0];
-                    selection[1] = stroke[3][1];
-                    selection[2] = stroke[4][0];
-                    selection[3] = stroke[4][1];
-                } else {
-                    let initial = stroke[3];
-
-                    // Set offset of selection to mouse position (moving selection)
-                    stroke[4][0] = posX-initial[0];
-                    stroke[4][1] = posY-initial[1];
-                    
-                    // Update visualisation to match actual selection
-                    selection[4] = stroke[4][0];
-                    selection[5] = stroke[4][1];
-                }
-
-                break
-
-            case 7:
-                stroke[3][0] = posX;
-                stroke[3][1] = posY;
-                break
-
-            case 9:
-                stroke[2].push([posX, posY])
-                break
+    if (event.button === 0) {
+        if (pendingChange) {
+            let updateChange = tools[pendingChange[0]].update;
+            if (updateChange) {
+                updateChange(
+                    pendingChange, posX, posY
+                );
+            }
         }
+    }
+
+
+    // If the selection is in the "shaping stage", update corner to mouse position
+    if (selectionStage === 1) {
+        //selection[0] = stroke[3][0];
+        //selection[1] = stroke[3][1];
+        selection[2] = posX+1;
+        selection[3] = posY+1;
     }
 };
 
@@ -564,7 +223,7 @@ workarea.onmousemove = (event) => {
 
 
 // When the mouse is pressed, a new change is being initiated.
-workarea.onmousedown = (event) => {
+preview.onmousedown = (event) => {
     let mp = mousePositionFromEvent(event, workarea, canvasResolution);
     let posX = mp[0];
     let posY = mp[1];
@@ -572,100 +231,50 @@ workarea.onmousedown = (event) => {
     switch (event.button) {
         // If the button is a left click, initiate a change based on the tool
         // selection (toolID)
+        
         case 0:
             // The structure of every change is different, 
             // but they all have the same 2 first values. Type and color
-            let newStroke = [
-                toolID, 
-                [
-                    strokeColor[0], 
-                    strokeColor[1], 
-                    strokeColor[2], 
-                    strokeColor[3]
-                ]
-            ];
-            let params;
-        
-            
-            // Every change is stored as an array.
-            // The structure will be defined here, and modified above in the onmousemove area.
-            // They contain values specific to the change, usually coordinate and color values.
+            pendingChange = [toolID, strokeColor]
 
-            // Make sure your IDE uses a monospace font (most do), otherwise the below comments wont be aligned
-            switch (toolID) {
-                case 0:
-                    // multi point line (draw)
-                    //        \/ array of points (to be changed)
-                    params = [[]]
-                    break
-        
-                case 1:
-                    // 2 point line (straight line)
-                    //         \/ start     \/ end (to be changed)
-                    params = [[posX, posY], [posX, posY]]
-                    break
-        
-                case 2:
-                    // rectangle
-                    //        \/ top left   \/ bottom right (to be changed)
-                    params = [[posX, posY], [posX, posY]]
-                    break
-        
-                case 3:
-                    // filter
-                    //       \/ given     \/ top left   \/ bottom right (to be changed)
-                    params = [filterMode, [posX, posY], [posX, posY]]
-                    break
+            // The structure (or arguments) are defined in tools.js
+            // Usually arguments contain values specific to the change, like coordinates.
+            pendingChange.push(...tools[toolID].getStructure(posX, posY))
 
-                case 4:
-                    // fill
-                    //       \/ point in area to fill
-                    params = [[posX, posY]]
-                    break
 
-                case 5:
-                    // color replacement
-                    //       \/ color to replace
-                    params = [getPixel(mainCtx, posX, posY)]
-                    break
-
-                case 6:
-                    // selection clone
-                    if (selectionExists) {
-                        // stage \/  \/ initial    \/ offset (to be changed)
-                        params = [1, [posX, posY], [posX, posY]] // Append offset change
-                    } else {
-                        // stage \/  \/ top left   \/ bottom right (both to be changed)
-                        params = [0, [posX, posY], [posX, posY]]; // Append selection initialization change
-                        selectionExists = true
-                    }
-                    
-                    break
-
-                case 7:
-                    // circle / ellipse
-                    //        \/ top left   \/ bottom right (to be changed)
-                    params = [[posX, posY], [posX, posY]]
-                    break
-
-                case 9:
-                    // eraser
-                    //        \/ array of points (to be changed)
-                    params = [[]]
-                    break
-            }
-            
-            newStroke.push(...params) // Add parameters to the change array
-
-            // In the below mouseup event, it will detect that a new change has been made and draw it
-            pendingChange = newStroke
+            // Get rid of selection when clicked off
+            selectionStage = 0;
 
             break
 
+        case 2:
+            selection = [posX, posY, posX, posY, 0, 0]
+            selectionStage = 1
 
-        case 2: // This makes the right click behave like an eyedropper tool
-            strokeColor = getPixel(mainCtx, posX, posY);
-            redrawPicker();
+            //strokeColor = getPixel(mainCtx, posX, posY);
+            //redrawPicker();
+            break
+    }
+}
+
+
+selectIndicator.onmousedown = (event) => {
+    let mp = mousePositionFromEvent(event, workarea, canvasResolution);
+    let posX = mp[0];
+    let posY = mp[1];
+
+    switch (event.button) {
+        // If the button is a left click, initiate a change based on the tool
+        // selection (toolID)
+        
+        case 0:
+            pendingChange = [7, [0, 0, 0], selection, [posX, posY], [posX, posY]]
+
+            break
+
+        case 2:
+            selectionStage = 1;
+
             break
     }
 }
@@ -677,16 +286,23 @@ workarea.onmousedown = (event) => {
 // and rendered to the main canvas.
 workarea.onmouseup = () => {
     if (pendingChange) {
-        applyChange(mainCtx, pendingChange)
-
-        if (pendingChange[0] === 6) {
-            if (pendingChange[2] === 1) {
-                selection = [0, 0, 0, 0, 0, 0];
-                selectionExists = false;
-            }
-        }
+        drawChange(mainCtx, pendingChange);
+        applyChanges();
 
         pendingChange = null;
+    }
+
+    if (selectionStage === 1) {
+        selectionStage = 2
+    }
+    if (selectionStage === 2) {
+        selection[0] += selection[4]
+        selection[1] += selection[5]
+        selection[2] += selection[4]
+        selection[3] += selection[5]
+
+        selection[4] = 0
+        selection[5] = 0
     }
 }
 
@@ -700,16 +316,8 @@ workarea.onmouseup = () => {
 document.body.onkeydown = (event) => {
     switch(event.key) {
         case "z":
-            let lastChange = changeLog[changeLog.length-1]
-
             // Remove last change
             changeLog.pop()
-
-            // If last change was a selection clone, the change
-            // consists of two items. Remove the second part of the change.
-            if (lastChange[0] === 6) {
-                changeLog.pop()
-            }
 
             // Redraw
             reRender()
