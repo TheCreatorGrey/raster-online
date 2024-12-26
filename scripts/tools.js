@@ -28,7 +28,7 @@ const tools = [
         },
         
         // Called when the change is to be drawn to the canvas
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let color = args[1];
 
@@ -101,7 +101,7 @@ const tools = [
             change[2].push([mouseX, mouseY])
         },
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let points = args[2];
 
@@ -142,7 +142,7 @@ const tools = [
             change[3][1] = mouseY
         },
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let color = args[1];
 
@@ -189,7 +189,7 @@ const tools = [
             change[3][1] = mouseY
         },
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let color = args[1];
 
@@ -238,7 +238,7 @@ const tools = [
             change[3][1] = mouseY;
         },
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let color = args[1];
 
@@ -251,7 +251,7 @@ const tools = [
                     let distanceFromCenter = Math.round(getDistance(center, [x, y]))
 
                     if (distanceFromCenter < radius) {
-                        putPixel(context, x, y, color)
+                        await putPixel(context, x, y, color)
                     }
                 }
             }
@@ -286,7 +286,7 @@ const tools = [
 
         update:null,
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let color = args[1];
 
@@ -294,7 +294,7 @@ const tools = [
             let filled = [];
 
             let start = args[2];
-            let targetColor = getPixel(mainCtx, start[0], start[1]);
+            let targetColor = await getPixel(mainCtx, start[0], start[1]);
 
             fillQueue.push([start[0], start[1]])
 
@@ -323,7 +323,7 @@ const tools = [
                     continue
                 }
                 
-                let pointColor = getPixel(mainCtx, x, y);
+                let pointColor = await getPixel(mainCtx, x, y);
 
                 // If color is an exact match, change pixel and continue
                 if (
@@ -332,7 +332,7 @@ const tools = [
                     (pointColor[2] === targetColor[2]) && 
                     (pointColor[3] === targetColor[3])
                 ) {
-                    putPixel(context, x, y, color);
+                    await putPixel(context, x, y, color);
                     filled.push(`${x}/${y}`)
 
                     fillQueue.push([x+1, y]) // Add surrounding points to be checked
@@ -340,6 +340,8 @@ const tools = [
                     fillQueue.push([x, y+1])
                     fillQueue.push([x, y-1])
                 }
+
+                await delay(.01);
             }
 
         }
@@ -366,20 +368,20 @@ const tools = [
         user_selected:true,
 
         getStructure:(mouseX, mouseY) => {
-            //      \/ color to replace
-            return [getPixel(mainCtx, mouseX, mouseY)]
+            //      \/ Point of color to replace
+            return [mouseX, mouseY]
         },
 
         update:null,
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
 
             let color = args[1];
-            let toReplace = args[2];
+            let toReplace = await getPixel(mainCtx, args[2], args[3]);
 
             for (let x=0; x < canvasResolution[0]; x++) {
                 for (let y=0; y < canvasResolution[1]; y++) {
-                    let originalColor = getPixel(mainCtx, x, y);
+                    let originalColor = await getPixel(mainCtx, x, y);
     
                     if (
                         (originalColor[0] === toReplace[0]) && 
@@ -387,9 +389,11 @@ const tools = [
                         (originalColor[2] === toReplace[2]) && 
                         (originalColor[3] === toReplace[3])
                     ) {
-                        putPixel(context, x, y, color);
+                        await putPixel(context, x, y, color);
                     }
                 }
+
+                await delay(1);
             }
 
         }
@@ -417,8 +421,8 @@ const tools = [
         user_selected:false,
 
         getStructure:(mouseX, mouseY) => {
-            //     \/ selection   \/ initial     \/ offset (to be changed)
-            return [selection, [mouseX, mouseY], [mouseX, mouseY]]
+            //     \/ selection            \/ initial        \/ offset (to be changed)
+            return [cloneArray(selection), [mouseX, mouseY], [mouseX, mouseY]]
         },
 
         update:(change, mouseX, mouseY) => {
@@ -430,7 +434,7 @@ const tools = [
             selection[5] = change[4][1];
         },
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
             let offset = args[4];
             let [startX, startY, endX, endY] = correctRect(...args[2]);
 
@@ -440,7 +444,7 @@ const tools = [
             ]
 
             let region = mainCtx.getImageData(startX, startY, size[0], size[1]);
-
+            //context.clearRect(startX, startY, size[0], size[1]);
             context.putImageData(region, startX+offset[0], startY+offset[1]);
 
         }
@@ -469,26 +473,35 @@ const tools = [
         // Since this is applied through the context menu, the
         // "getStructure" function isn't necessary. But for
         // readability purposes, here's what it looks like:
-        // [selection, filter ID]
+        // [selection, filter ID, filter color (only used with some filters)]
         getStructure:null,
 
         update:null,
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
             let [startX, startY, endX, endY] = correctRect(...args[2]);
+
+            let pixelCt = 0;
+            let delayInterval = 2000; // There will be a 1ms delay every 2000 pixels to prevent crashing
 
             for (let x=startX; x < endX; x++) {
                 for (let y=startY; y < endY; y++) {
-                    let currentColor = getPixel(mainCtx, x, y);
-                    
-                    let newColor = filters[args[3]].filter(currentColor, x, y)
+                    let currentColor = await getPixel(mainCtx, x, y);
+                    let newColor = filters[args[3]].filter(currentColor, x, y, args[4])
     
-                    putPixel(
+                    await putPixel(
                         mainCtx,
                         x, y, 
                         newColor,
                         true
                     )
+
+                    pixelCt += 1;
+
+                    if (pixelCt === delayInterval) {
+                        pixelCt = 0;
+                        await delay(1);
+                    }
                 }
             }
 
@@ -520,7 +533,7 @@ const tools = [
 
         update:null,
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
             let position = args[2];
             let image = args[3];
 
@@ -555,7 +568,7 @@ const tools = [
 
         update:null,
 
-        draw:(context, args) => {
+        draw: async (context, args) => {
             mainCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1])
         }
     },

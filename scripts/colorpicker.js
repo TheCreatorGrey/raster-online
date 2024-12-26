@@ -79,9 +79,7 @@ var dragging = false;
 
 addEventListener("mousemove", (event) => {
     if (dragging) {
-        let mp = mousePositionFromEvent(event, colorCanvas, [subdivisions, 5], false);
-        let posX = mp[0];
-        let posY = mp[1];
+        let [ posX, posY ] = mouse.relativeTo(colorCanvas, [subdivisions, 5], false);
 
         posX = Math.round(posX);
         posY = Math.floor(posY)

@@ -23,9 +23,8 @@ input.onchange = async (e) => {
             adjustCanvas()
             updateCanvasPosition()
 
-            changeLog.push([9, [0, 0, 0], [0, 0], image])
-
-            reRender()
+            drawChange([9, [0, 0, 0], [0, 0], image]);
+            applyChanges();
 
             document.getElementById("canvasSize_x").innerText = canvasResolution[0]
             document.getElementById("canvasSize_y").innerText = canvasResolution[1]

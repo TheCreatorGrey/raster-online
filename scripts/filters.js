@@ -3,8 +3,8 @@ const filters = [
     {
         "alias":"Brighten",
 
-        "filter":(color) => {
-            return [color[0]+10, color[1]+10, color[2]+10, color[3]]
+        "filter":(color, x, y, filterColor) => {
+            return [color[0]+8, color[1]+8, color[2]+8, color[3]]
         },
     },
 
@@ -13,8 +13,32 @@ const filters = [
     {
         "alias":"Darken",
 
-        "filter":(color) => {
-            return [color[0]-10, color[1]-10, color[2]-10, color[3]]
+        "filter":(color, x, y, filterColor) => {
+            return [color[0]-8, color[1]-8, color[2]-8, color[3]]
+        },
+    },
+
+
+    // 2 (greyscale)
+    {
+        "alias":"Greyscale",
+
+        "filter":(color, x, y, filterColor) => {
+            let average = (color[0] + color[1] + color[2]) / 3;
+            return [average, average, average, color[3]]
+        },
+    },
+
+
+    // 2 (tint)
+    {
+        "alias":"Tint",
+
+        "filter":(color, x, y, filterColor) => {
+            let average = (color[0] + color[1] + color[2]) / 3;
+            average /= 255;
+
+            return [filterColor[0]*average, filterColor[1]*average, filterColor[2]*average, filterColor[3]]
         },
     },
 
@@ -23,7 +47,7 @@ const filters = [
     {
         "alias":"Dither",
 
-        "filter":(color, x, y) => {
+        "filter":(color, x, y, filterColor) => {
             let alpha = color[3];
 
             // you may want to improve this code later (it sucks)
@@ -43,10 +67,27 @@ const filters = [
     {
         "alias":"Noise",
 
-        "filter":(color) => {
+        "filter":(color, x, y, filterColor) => {
             rdm = 5 * (Math.random()-.5)
 
             return [color[0]+rdm, color[1]+rdm, color[2]+rdm, color[3]];
+        },
+    },
+
+
+    // 4 (extract)
+    {
+        "alias":"Lines",
+
+        "filter":(color, x, y, filterColor) => {
+            let average = (color[0] + color[1] + color[2]) / 3;
+            let finalColor = [0, 0, 0, 0];
+
+            if (average < 50) {
+                finalColor = [0, 0, 0, 1]
+            }
+
+            return finalColor
         },
     },
 
@@ -55,15 +96,15 @@ const filters = [
     {
         "alias":"Clear",
 
-        "filter":(color) => {
+        "filter":(color, x, y, filterColor) => {
             return [0, 0, 0, 0];
         },
     },
 ]
 
-function filterSelection(id) {
-    drawChange(previewCtx, [8, strokeColor, selection, id]);
-    applyChanges();
+async function filterSelection(id) {
+    await drawChange([8, cloneArray(strokeColor), selection, id, cloneArray(strokeColor)]);
+    await applyChanges();
 }
 
 // Populates the selection context menu with buttons for each filter

@@ -1,3 +1,5 @@
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 function getDistance(p1, p2) {
     return Math.sqrt(
         ((p2[0] - p1[0])**2) + 
@@ -26,4 +28,14 @@ function correctRect(left, top, right, bottom) {
     }
 
     return [startX, startY, endX, endY]
+}
+
+function cloneArray(array) {
+    let newArray = [];
+
+    for (let i of array) {
+        newArray.push(i)
+    }
+
+    return newArray
 }

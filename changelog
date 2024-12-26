@@ -52,6 +52,18 @@ Moved filters to a new selection context menu
 Small UI changes and improvements
 Icon redesigns
 Updated documentation
+Added tab icon
+
+Version 8:
+Fixed freezing when using certain tools
+Added filters
+Fixed weird behavior when going off canvas
+Improved zooming navigation
+Small UI improvements
+Export selection button works now
+Added basic support for drawing tablets
+
+
 
 
 Known issues and pending changes:
@@ -64,13 +76,10 @@ the clone.
 Make webpage more scalable; There is too much overlap
 when the window is sized down
 
-UI misalignment in toolbar
-Alpha overwrite when cloning pixels
-
-Make export selection button work
-
-Add support for drawing tablets and touch devices
-
 Prevent selection context menu from going over the edge of the window
+
+Create a filetype to save projects
+
+Fix undo tool
 
 UPDATE DOCUMENTATION

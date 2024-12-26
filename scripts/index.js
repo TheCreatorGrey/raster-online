@@ -69,6 +69,7 @@ var changeLog = [];
 // [change type, color, arguments]
 
 // First item of a change represents its type.
+// NUMBERING IS OUTDATED (I will update it later but im too lazy)
 // 0 = Multi point line
 // 1 = Erase
 // 2 = 2-point line
@@ -98,58 +99,81 @@ var selection = [0, 0, 0, 0, 0, 0];
 // 0 = no selection 1 = making selection 2 = active selection
 var selectionStage = 0;
 
-function save() {
-    let link = document.createElement("a");
-    document.body.appendChild(link);
-    link.setAttribute("type", "hidden");
-    link.href = canvas.toDataURL();
-    link.download = "project.png";
-    link.click();  
-    document.body.removeChild(link);
+
+
+
+// Export stuff
+function downloadFromUrl(url, filename) {
+    let link = document.getElementById("saveLink");
+    link.href = url;
+    link.download = filename;
+    link.click();
 }
+
+function save() {
+    downloadFromUrl(canvas.toDataURL(), "ro_project.png")
+}
+
+// Export (selection) stuff
+document.getElementById("exportSelection").onclick = () => {
+    let exportCanvas = document.getElementById("exportCanvas");
+    let exportCtx = exportCanvas.getContext("2d");
+
+    let [startX, startY, endX, endY] = correctRect(...selection);
+
+    let width = endX - startX;
+    let height = endY - startY;
+
+    exportCanvas.width = width;
+    exportCanvas.height = height;
+
+    let region = mainCtx.getImageData(
+        startX, startY, 
+        width, height
+    );
+
+    exportCtx.putImageData(region, 0, 0);
+    downloadFromUrl(exportCanvas.toDataURL(), "ro_selection.png");
+    exportCtx.clearRect(0, 0, width, height);
+}
+
+
 
 
 // When a change is made, it will be repeatedly drawn
 // to the preview canvas. When it is done, the preview
 // canvas will be drawn to the main canvas here
-function applyChanges() {
-    mainCtx.drawImage(preview, 0, 0)
+async function applyChanges() {
+    await mainCtx.drawImage(preview, 0, 0)
+    await previewCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
 }
 
 
 // Renders a change in array form to a canvas
-async function drawChange(context, c, log=true) {
+async function drawChange(c, log=true) {
     let type = c[0];
     let color = c[1];
 
     if (log) {
-        changeLog.push(pendingChange)
+        changeLog.push(c)
     }
 
-    tools[type].draw(previewCtx, c)
+    await tools[type].draw(previewCtx, c)
 }
 
 
 // Redraws all changes
-function reRender() {
-    mainCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
+async function reRender() {
+    await mainCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
 
     for (let c of changeLog) {
-        drawChange(mainCtx, c, false)
+        await drawChange(c, false);
+        await applyChanges()
     }
-
-    applyChanges()
 }
 
 
 function update() {
-    // Clear preview
-    previewCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
-
-    if (pendingChange) {
-        drawChange(previewCtx, pendingChange, false);
-    }
-
     // Updates the selection preview boxes if there is a selection
     if (selectionStage > 0) {
         moveIndicator.hidden = false
@@ -177,8 +201,8 @@ function update() {
         selectionContext.hidden = false
 
         let bounding = selectIndicator.getBoundingClientRect();
-        selectionContext.style.left = bounding.right + "px"
-        selectionContext.style.top = bounding.top + "px"
+        selectionContext.style.left = bounding.right + "px";
+        selectionContext.style.top = bounding.top + "px";
     } else {
         selectionContext.hidden = true
     }
@@ -188,23 +212,90 @@ setInterval(update, 10);
 
 
 
+
+// ====================
+
+let mouse = {
+    x:0, y:0, 
+    button:null,
+    relativeTo:(element, multiply=[1, 1], round=true) => {
+        let bounding = element.getBoundingClientRect();
+
+        let posX = mouse.x;
+        let posY = mouse.y;
+
+        // Constraints
+        if (posX < bounding.left) {
+            posX = bounding.left
+        }
+        if (posY < bounding.top) {
+            posY = bounding.top
+        }
+        if (bounding.right < posX) {
+            posX = bounding.right
+        }
+        if (bounding.bottom < posY) {
+            posY = bounding.bottom
+        }
+    
+        posX -= bounding.left;
+        posY -= bounding.top;
+        
+        posX /= bounding.width;
+        posY /= bounding.height;
+    
+        posX *= multiply[0];
+        posY *= multiply[1];
+    
+        if (round) {
+            posX = Math.floor(posX);
+            posY = Math.floor(posY);
+        }
+        
+        return [posX, posY]
+    },
+    fromCenter:() => {
+        return [
+            mouse.x - (document.body.clientWidth/2),
+            mouse.y - (document.body.clientHeight/2)
+        ]
+    }
+};
+
+//document.body.onpointermove = (event) => {
+//    mouse.x = event.clientX;
+//    mouse.y = event.clientY;
+//};
+
+document.body.onpointerdown = (event) => {
+    mouse.button = event.button
+};
+
+// ====================
+
+
+
 let toolID = 0;
-workarea.onmousemove = (event) => {
+document.body.onpointermove = async (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+
     // If the mouse is moving during an active change,
     // the change should be modified (e.g. the bottom right
     // corner of a rectangle should be updated to the mouse position)
 
-    let mp = mousePositionFromEvent(event, workarea, canvasResolution);
-    let posX = mp[0];
-    let posY = mp[1];
+    let [ posX, posY ] = mouse.relativeTo(workarea, canvasResolution);
     
-    if (event.button === 0) {
+    if (mouse.button === 0) {
         if (pendingChange) {
             let updateChange = tools[pendingChange[0]].update;
             if (updateChange) {
                 updateChange(
                     pendingChange, posX, posY
                 );
+
+                await previewCtx.clearRect(0, 0, canvasResolution[0], canvasResolution[1]);
+                await drawChange(pendingChange, false);
             }
         }
     }
@@ -222,11 +313,11 @@ workarea.onmousemove = (event) => {
 
 
 
-// When the mouse is pressed, a new change is being initiated.
-preview.onmousedown = (event) => {
-    let mp = mousePositionFromEvent(event, workarea, canvasResolution);
-    let posX = mp[0];
-    let posY = mp[1];
+// When the pointer is clicked on the canvas, initiate a new change
+preview.onpointerdown = (event) => {
+    mouse.button = event.button;
+
+    let [ posX, posY ] = mouse.relativeTo(workarea, canvasResolution);
 
     switch (event.button) {
         // If the button is a left click, initiate a change based on the tool
@@ -235,7 +326,7 @@ preview.onmousedown = (event) => {
         case 0:
             // The structure of every change is different, 
             // but they all have the same 2 first values. Type and color
-            pendingChange = [toolID, strokeColor]
+            pendingChange = [toolID, cloneArray(strokeColor)]
 
             // The structure (or arguments) are defined in tools.js
             // Usually arguments contain values specific to the change, like coordinates.
@@ -251,17 +342,13 @@ preview.onmousedown = (event) => {
             selection = [posX, posY, posX, posY, 0, 0]
             selectionStage = 1
 
-            //strokeColor = getPixel(mainCtx, posX, posY);
-            //redrawPicker();
             break
     }
 }
 
 
-selectIndicator.onmousedown = (event) => {
-    let mp = mousePositionFromEvent(event, workarea, canvasResolution);
-    let posX = mp[0];
-    let posY = mp[1];
+selectIndicator.onpointerdown = (event) => {
+    let [ posX, posY ] = mouse.relativeTo(workarea, canvasResolution);
 
     switch (event.button) {
         // If the button is a left click, initiate a change based on the tool
@@ -284,10 +371,12 @@ selectIndicator.onmousedown = (event) => {
 // drawing a line, rectangle or moving something.
 // Since this change is finished, it can be added to the log
 // and rendered to the main canvas.
-workarea.onmouseup = () => {
+document.body.onpointerup = async () => {
+    mouse.button = null;
+
     if (pendingChange) {
-        drawChange(mainCtx, pendingChange);
-        applyChanges();
+        await drawChange(pendingChange);
+        await applyChanges();
 
         pendingChange = null;
     }
@@ -311,9 +400,8 @@ workarea.onmouseup = () => {
 
 
 
-// For now, the only function of this is to detect when the "z"
-// key is pressed and undoes a change
-document.body.onkeydown = (event) => {
+// Keybinds and whatever
+document.body.onkeydown = async (event) => {
     switch(event.key) {
         case "z":
             // Remove last change
@@ -321,5 +409,21 @@ document.body.onkeydown = (event) => {
 
             // Redraw
             reRender()
+
+            break
+
+        case "r":
+            // Redraw
+            reRender()
+
+            break
+
+        case "e":
+            let [ posX, posY ] = mouse.relativeTo(workarea, canvasResolution);
+
+            strokeColor = await getPixel(mainCtx, posX, posY);
+            redrawPicker();
+
+            break
     }
 }

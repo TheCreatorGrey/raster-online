@@ -63,8 +63,8 @@ window.addEventListener("load", () => {
         bounding = workarea.getBoundingClientRect();
         workarea.style.backgroundSize = bounding.width/canvasResolution[0] + "px";
 
-        canvasPosition[0] = canvasPosition[0] + (-canvasPosition[0] * (1 - canvasZoom))
-        canvasPosition[1] = canvasPosition[1] + (-canvasPosition[1] * (1 - canvasZoom))
+        canvasPosition[0] = canvasPosition[0] + (mouse.fromCenter()[0] - canvasPosition[0]) * (1 - canvasZoom)
+        canvasPosition[1] = canvasPosition[1] + (mouse.fromCenter()[1] - canvasPosition[1]) * (1 - canvasZoom)
 
         updateCanvasPosition()
     }

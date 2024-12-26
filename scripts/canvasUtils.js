@@ -1,20 +1,20 @@
 // I would add more commenting here but it seems fairly obvious what these do...
 
-function putPixel(ctx, x, y, color, overwrite=false) {
+async function putPixel(ctx, x, y, color, overwrite=false) {
     if (overwrite) {
-        ctx.clearRect(x, y, 1, 1)
+        await ctx.clearRect(x, y, 1, 1)
     }
 
     ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
-    ctx.fillRect(x, y, 1, 1) 
+    await ctx.fillRect(x, y, 1, 1) 
 }
 
 function clearPixel(ctx, x, y) {
     ctx.clearRect(x, y, 1, 1)
 }
 
-function getPixel(ctx, x, y) {
-    let color = ctx.getImageData(x, y, 1, 1).data;
+async function getPixel(ctx, x, y) {
+    let color = await ctx.getImageData(x, y, 1, 1).data;
 
     return [
         color[0],
@@ -91,30 +91,6 @@ function drawRect(context, topLeft, bottomRight, color) {
         context.fillRect(left, bottom, width+1, 1) // Bottom
         context.fillRect(left, top+1, 1, height-1) // Left
     }
-}
-
-
-function mousePositionFromEvent(event, element, resolution, round=true) {
-    let bounding = element.getBoundingClientRect();
-
-    let posX = event.clientX;
-    let posY = event.clientY;
-
-    posX -= bounding.left;
-    posY -= bounding.top;
-    
-    posX /= bounding.width;
-    posY /= bounding.height;
-
-    posX *= resolution[0];
-    posY *= resolution[1];
-
-    if (round) {
-        posX = Math.floor(posX);
-        posY = Math.floor(posY);
-    }
-
-    return [posX, posY]
 }
 
 function intersectsRect(point, rect) {

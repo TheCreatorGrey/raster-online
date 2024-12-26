@@ -16,6 +16,12 @@
                 enough to handle high resolution images, it is designed 
                 for pixel art. If you use high resolution images, you 
                 may experience performance issues. <br><br>
+
+                While drawing tablets are supported, this documentation 
+                assumes you are using a mouse, so terms like "left click" 
+                and "right click" will be used. If you are using a drawing
+                tablet or touch device, you will need to use the equivalent
+                of the mouse button mentioned. <br><br>
     
                 This document will go through every feature in this tool
                 and explain their purposes and uses. This documentation
@@ -26,9 +32,9 @@
     
             <h2>Navigation: Work Area</h2>
             <span>
-                The work area can be navigated using the mouse.
-                To pan the work area, hold middle click and drag.
-                To zoom in or out of the work area, use the scroll wheel.
+                The work area can be navigated using the mouse or pointer.
+                To pan the work area, hold middle click and drag. To zoom 
+                in or out of the work area, use the scroll wheel.
             </span>
     
             <br><br><br>
@@ -69,12 +75,12 @@
     
             <h2>Tools</h2>
             <span>
-                Tools are relatively self-explanitory. You can click and drag on
-                the work area to make changes to the canvas. What happens depends
-                on which tool you are using. Most tools will use the color
-                selected by the color picker. The terms "starting point" and 
+                Using tools, you can make changes to the canvas. Some tools will 
+                require you to click and drag to use, while others only need a click.
+                What happens depends on which tool you are using. Most tools will use 
+                the color selected by the color picker. The terms "starting point" and 
                 "ending point" will be referenced throughout this section,
-                referring to the point where your mouse is pressed and released
+                referring to the point where your mouse or pointer is pressed and released
                 respectively.
     
                 <h3>Draw</h3>
@@ -105,7 +111,7 @@
                 changed to the selected color.
     
                 <h3>Clear</h3>
-                This tool will clear the entire canvas.
+                When clicked over the canvas, this tool will clear the entire canvas.
             </span>
     
             <br><br><br>
@@ -142,10 +148,17 @@
                 The functions of each are listed below:
     
                 <h3>Brighten</h3>
-                Brightens the color of affected pixels.
+                Brightens the color of affected pixels by 8.
     
                 <h3>Darken</h3>
-                Darkens the color of affected pixels.
+                Darkens the color of affected pixels by 8.
+
+                <h3>Greyscale</h3>
+                Applies greyscale or "black and white" to affected pixels.
+
+                <h3>Tint</h3>
+                Changes the color of affected pixels to shades of
+                the selected color.
     
                 <h3>Dither</h3>
                 Alternates affected pixels between their original
@@ -154,6 +167,9 @@
                 <h3>Noise</h3>
                 Changes the brightness of affected pixels based
                 on random values.
+
+                <h3>Lines</h3>
+                Sets affected dark pixels to black and clears the rest.
     
                 <h3>Clear</h3>
                 Clears all affected pixels.
